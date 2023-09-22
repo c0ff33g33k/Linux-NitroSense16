@@ -251,6 +251,14 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         else:
             print("Error read EC register for USB Charging: " + str(self.usbCharging))
 
+        ## Set the charge limit indicator
+        if self.batteryChargeLimit == int(ECS.BATTERYLIMITON.value, 0):
+            self.chargeLimit.setChecked(True)
+        elif self.batteryChargeLimit == int(ECS.BATTERYLIMITOFF.value, 0):
+            self.chargeLimit.setChecked(False)
+        else:
+            print("Error read EC register for charge limit: " + str(self.usbCharging))            
+
         self.setPredatorMode()
         self.setFanMode()
 
@@ -264,7 +272,8 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         # self.trackpadCB.clicked['bool'].connect(self.toggletrackpad)
         self.KBTimerCB.clicked['bool'].connect(self.togglekbauto)
         self.LCDOverdriveCB.clicked['bool'].connect(self.toggleLCDOverdrive)
-        self.usbChargingCB.clicked['bool'].connect(self.toggleUSBCharging)   
+        self.usbChargingCB.clicked['bool'].connect(self.toggleUSBCharging)
+        self.chargeLimit.clicked['bool'].connect(self.togglePowerLimit)
 
     # Set the current fan and turbo mode
     def setFanMode(self):
@@ -279,7 +288,7 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
             self.cpuFanMode = PFS.Manual
             self.cpu_manual.setChecked(True)
         else:
-            print("Warning: Unknow CPU fan mode value '" + self.cpuMode + "'")
+            print("Warning: Unknow CPU fan mode value '" + str(self.cpuMode) + "'")
             # self.cpuauto()
         
         if self.gpuMode == int(ECS.GPU_AUTO_MODE.value, 0) or self.gpuMode == int('0x00', 0):
@@ -340,6 +349,7 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         self.powerPluggedIn = self.ECHandler.ec_read(int(ECS.POWERSTATUS.value, 0))
         self.onBatteryPower = self.ECHandler.ec_read(int(ECS.BATTERYSTATUS.value, 0))
         self.predatorMode = self.ECHandler.ec_read(int(ECS.PREDATORMODE.value, 0))
+        self.batteryChargeLimit = self.ECHandler.ec_read(int(ECS.BATTERYCHARGELIMIT.value, 0))
 
         self.cpuTemp = self.ECHandler.ec_read(int(ECS.CPUTEMP.value, 0))
         self.gpuTemp = self.ECHandler.ec_read(int(ECS.GPUTEMP.value, 0))
@@ -474,6 +484,13 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
     #     else:
     #         self.ECHandler.ec_write(int(ECS.TRACKPADSTATUS.value, 0), int(ECS.TRACKPADDISABLED.value, 0))
 
+    # Toggle Power Limit
+    def togglePowerLimit(self, tog):
+        if tog:
+            self.ECHandler.ec_write(int(ECS.BATTERYCHARGELIMIT.value, 0), int(ECS.BATTERYLIMITON.value, 0))
+        else:
+            self.ECHandler.ec_write(int(ECS.BATTERYCHARGELIMIT.value, 0), int(ECS.BATTERYLIMITOFF.value, 0))
+
     ## ----------------------------------------------------
     # Toggle the Turbo Led
     def ledset(self):
@@ -498,6 +515,12 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
             print("Error read EC register for Battery Status: " + str(self.predatorMode))
 
         self.batteryStatusValue.setText(batteryStat)
+
+        ## Set the battery charge indicator
+        if self.batteryChargeLimit == int(ECS.BATTERYLIMITON.value, 0):
+            self.batteryChargeLimitValue.setText("On")
+        elif self.batteryChargeLimit == int(ECS.BATTERYLIMITOFF.value, 0):
+            self.batteryChargeLimitValue.setText("Off")
 
     # Update the Predator state
     def setPredatorMode(self):

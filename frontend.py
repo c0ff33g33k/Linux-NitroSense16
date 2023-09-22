@@ -186,12 +186,12 @@ class Ui_PredatorSense(object):
         self.KBTimerCB = QtWidgets.QCheckBox(self.KB_box)
         self.KBTimerCB.setFont(font)
         self.KBTimerCB.setObjectName("global_KBTimer")
-        self.KBTimerCB.move(10, 15)
+        self.KBTimerCB.move(10, 10)
 
         self.LCDOverdriveCB = QtWidgets.QCheckBox(self.KB_box)
         self.LCDOverdriveCB.setFont(font)
         self.LCDOverdriveCB.setObjectName("LCDOverdrive")
-        self.LCDOverdriveCB.move(10, 35)
+        self.LCDOverdriveCB.move(10, 25)
 
         # self.trackpadCB = QtWidgets.QCheckBox(self.KB_box)
         # self.trackpadCB.setFont(font)
@@ -201,7 +201,12 @@ class Ui_PredatorSense(object):
         self.usbChargingCB = QtWidgets.QCheckBox(self.KB_box)
         self.usbChargingCB.setFont(font)
         self.usbChargingCB.setObjectName("usbCharging")
-        self.usbChargingCB.move(10, 55)              
+        self.usbChargingCB.move(10, 40)
+
+        self.chargeLimit = QtWidgets.QCheckBox(self.KB_box)
+        self.chargeLimit.setFont(font)
+        self.chargeLimit.setObjectName("ChargeLimit")
+        self.chargeLimit.move(10, 55)                      
 
         ##------------------------------##
 
@@ -536,6 +541,7 @@ class Ui_PredatorSense(object):
         self.LCDOverdriveCB.setText("LCD Overdrive")
         # self.trackpadCB.setText("Disable Trackpad")
         self.usbChargingCB.setText("USB Charging")
+        self.chargeLimit.setText("Charge Limit")
 
         # Status box
         self.status_box.setTitle("Status")
