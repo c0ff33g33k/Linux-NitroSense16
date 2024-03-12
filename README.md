@@ -22,6 +22,12 @@
 sudo python main.py
 ```
 
+ - **YOU MAY NEED TO RESTART NVIDIA-POWERD SERVICE IN ORDER TO DETECT NEW TGP**
+
+ ```
+ sudo systemctl restart nvidia-powerd
+ ```
+
 ### Alternatively you can copy the .desktop file to your applications folder and launch it via it's icon
 
 You will need to update these 2 lines first to point to the correct program directory
@@ -57,9 +63,10 @@ Packages:
 ## This is a fork of [PredatorSense by mohsunb](https://github.com/mohsunb/PredatorSense), customized for ```PH315-54```
 
 ## Changelog:
+
 Mar 11, 2024
 ecwrite.py
- - Updated EC class to point to acpi_ec path ( /dev/ec ) instead of the default ( /sys/kernel/debug/ec/ec0/io ) which no longer is supported in Ubuntu.
+- Updated EC class to point to acpi_ec path ( /dev/ec ) instead of the default ( /sys/kernel/debug/ec/ec0/io ) which no longer is supported in Ubuntu.
 - Optimized code to use a buffer to store the contents of the EC register. Load once and read multiple times per update cycle.
 Added exception handling.
 
