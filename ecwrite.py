@@ -1,16 +1,20 @@
-EC_IO_FILE = '/sys/kernel/debug/ec/ec0/io'
+import os
+# EC_IO_FILE = '/sys/kernel/debug/ec/ec0/io'
+EC_IO_FILE = '/dev/ec' if os.system('ls /sys/kernel/debug/ec/ec0/io 2> /dev/null > /dev/null') else '/sys/kernel/debug/ec/ec0/io'
 
 ##------------------------------##
 ##----Class to read/write EC----##
 class ECWrite:
     def __init__(self):
-        print("Setting up EC access...")
         self.ec_path = EC_IO_FILE
+        print("Setting up EC access..." + self.ec_path)
+        self.buffer = b''
+        self.ec_file = None
         self.setupEC()
 
     def setupEC(self):
         try:
-            self.ec_file = open(self.ec_path, 'rb+')
+            self.ec_file = open(self.ec_path, 'rb+')#, buffering=0)
         except PermissionError:
             print('Run with sudo')
             exit(1)
@@ -19,29 +23,58 @@ class ECWrite:
             # from subprocess import Popen
             # Popen(['modprobe', 'ec_sys', 'write_support=1'])
             # print('EC Changed. Restarting the application may help if it is not working.')
+        except Exception as e:
+            print("Error: " + str(e))       
 
     def ec_write(self, address, value):
 
         try:
-            self.ec_file.read()
             self.ec_file.seek(address)
-            old_value = ord(self.ec_file.read(1))
-            if value != old_value:
-                # print("Before: %3d\tAfter: %3d" % (old_value, value))
-                self.ec_file.seek(address)
-                self.ec_file.write(bytearray([value]))
-            else:
-                print("Value was not changed: %s, %3d" % (hex(address), value))
-                print("Before: %3d\tAfter: %3d" % (old_value, value))
+            self.ec_file.write(bytearray([value]))
+
+            # self.ec_file.read()
+            # self.ec_file.seek(address)
+            # old_value = ord(self.ec_file.read(1))
+            # if value != old_value:
+            #     print("Before: %3d\tAfter: %3d" % (old_value, value))
+            #     self.ec_file.seek(address)
+            #     self.ec_file.write(bytearray([value]))
+            # else:
+            #     print("Value was not changed: %s, %3d" % (hex(address), value))
+            #     print("Before: %3d\tAfter: %3d" % (old_value, value))
         except Exception as e:
-            print("Error" + str(e))
+            print("Error: " + str(e))
+            exit(1)
 
+    ## Copy EC contents to buffer
     def ec_refresh(self):
-        self.ec_file.read()
+        try:
+            self.ec_file.seek(0)
+            self.buffer = self.ec_file.read()
+            # print(self.buffer)
+            if self.buffer == b'':
+                print("BAD BUFFER EXITING!")
+                exit(1) 
+            
+        except Exception as e:
+            print("Error: " + str(e))
+            exit(1)           
 
+    ## Read EC contents from buffer instead of going to disk
     def ec_read(self, address):
-        self.ec_file.seek(address)
-        return ord(self.ec_file.read(1))
+        try:        
+            # self.ec_file.seek(address)
+            # return ord(self.ec_file.read(1))
+
+            if self.buffer == b'':
+                print("BUFFER EMPTY")
+                exit(1)
+
+            return self.buffer[address]
+            # return ord(self.buffer[int(address)])
+        except Exception as e:
+            print("Error: " + str(e))
+            exit(1)            
 
     def shutdownEC(self):
         self.ec_file.close()

@@ -46,27 +46,55 @@ pip install git+https://github.com/georgewhewell/undervolt.git
 sudo apt-get install msr-tools
 ```
 
+Newer versions of Ubuntu have removed access to the EC registers via the ```ec_sys``` module so make sure you install the alternative ```acpi_ec```
+
 Packages:
 * ```Python Qt5``` -> [PyQt5](https://pypi.org/project/PyQt5/)
 * ```undervolt``` -> [Undervolt by georgewhewell](https://github.com/georgewhewell/undervolt)
 * ```msr-tools``` -> [msr-tools by intel](https://github.com/intel/msr-tools)
+* ```acpi_ec``` -> [acpi_ec by musikid](https://github.com/musikid/acpi_ec/)
 
 ## This is a fork of [PredatorSense by mohsunb](https://github.com/mohsunb/PredatorSense), customized for ```PH315-54```
 
 ## Changelog:
+Mar 11, 2024
+ecwrite.py
+ - Updated EC class to point to acpi_ec path ( /dev/ec ) instead of the default ( /sys/kernel/debug/ec/ec0/io ) which no longer is supported in Ubuntu.
+- Optimized code to use a buffer to store the contents of the EC register. Load once and read multiple times per update cycle.
+Added exception handling.
+
+frontend.py
+- Added a new monitoring tab to display the last 60 seconds of recorded voltage, temps and fan speed sensors.
+- Created a new custom chart class for modularity.
+- Increased the height of widget to accommodate new charts.
+
+main.py
+- Removed global min and max voltage readings.
+- Changed the voltage reading to be an average of all the cores rather than core 0.
+- Optmized voltage reading by reusing the same QProcess for each update rather than creating and destroying.
+- Added voltage, undervolt and min and max class variables.
+- Added missing batteryChargeLimit initialization.
+- Created global UPDATE_INTERVAL variable to store update fequency in ms.
+- Consolidated Qt frontend updates to the updatePredatorStatus function.
+- Updated shutdown to cleanly free resources.
+
+Sep 21, 2023
+- Added user toggle for charge limiting.
+- Bug fix output error for unknown CPU fan mode.
+
 Dec 22
-- Completely overhauled the UI
+- Completely overhauled the UI.
   - Added new Dialogs for fan speed, temperatures, modes, undervolting and miscellaneous
-  - Created a new screenshot to showcase the updated interface
-- Updated app icon to blue predator logo (originally red)
-- Created a new class for accessing EC registers
-  - Close file handle on shutdown
-- Created a timer to periodically update the UI
-- Created toggle for LCD Overdrive
-- Created toggle for USB charging
-- New function to check the current VCORE voltage and record max/min
-- New functions to undervolt CPU
-- New function to query battery charge limit
-- New function to query predator mode
-- New function to read fan speed
-- Lots of refactoring
+  - Created a new screenshot to showcase the updated interface.
+- Updated app icon to blue predator logo (originally red).
+- Created a new class for accessing EC registers.
+  - Close file handle on shutdown.
+- Created a timer to periodically update the UI.
+- Created toggle for LCD Overdrive.
+- Created toggle for USB charging.
+- New function to check the current VCORE voltage and record max/min.
+- New functions to undervolt CPU.
+- New function to query battery charge limit.
+- New function to query predator mode.
+- New function to read fan speed.
+- Lots of refactoring.

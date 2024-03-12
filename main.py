@@ -6,6 +6,7 @@ import sys
 from PyQt5.QtCore import Qt, QTimer, QProcess
 from PyQt5.QtGui import QPalette, QColor
 
+
 from frontend import Ui_PredatorSense
 from ecwrite import *
 import enum
@@ -88,68 +89,69 @@ class PFS(enum.Enum):
 ##---------Undervolting---------##
 UNDERVOLT_PATH = "<user_path>/.local/lib/python3.8/site-packages/undervolt.py"
 
-COREOFFSET = 90 # mV
-CACHEOFFSET = 90 # mV
-minrecordedVoltage = 20.0 # V
-maxrecordedVoltage = 0 # V
+COREOFFSET = 80 # mV
+CACHEOFFSET = 80 # mV
+UPDATE_INTERVAL = 1000 #1 sec interval
 
 ## Read the current undervoltage offsets
 def checkUndervoltStatus(self):
     process = QProcess()
     process.start('sudo python ' + UNDERVOLT_PATH + ' -r')
-    process.waitForStarted()
+    #process.waitForStarted()
     process.waitForFinished()
-    process.waitForReadyRead()
+    #process.waitForReadyRead()
     underVoltStatus = process.readAll()
     process.close()
     
     underVoltStatus = str(underVoltStatus, 'utf-8')
     # print(underVoltStatus)
-    self.undervoltStatus.setText(underVoltStatus)
+    self.undervolt = underVoltStatus
 
 ## Apply the undervoltage offsets values
 def applyUndervolt(self, core, cache):
     process = QProcess()
     process.start('sudo python ' + UNDERVOLT_PATH + ' --core -' + str(core) + ' --cache -' + str(cache))
-    process.waitForStarted()
+    #process.waitForStarted()
     process.waitForFinished()
-    process.waitForReadyRead()
+    #process.waitForReadyRead()
     process.close()
 
-    global minrecordedVoltage
-    global maxrecordedVoltage
-    minrecordedVoltage = 20.0
-    maxrecordedVoltage = 0
+    ##  Reset the min and max values on each undervolt action
+    # self.minrecordedVoltage = 2.0
+    # self.maxrecordedVoltage = 0
 
+    ## Call checkUndervoltStatus() to confirm that the setting have been properly applied.
     checkUndervoltStatus(self)
 
+## Global process better perf instead of creating and destroying every update cycle.
+voltage_process = QProcess()
 ## Update the current VCore
 def checkVoltage(self):
-    process = QProcess()
-    process.start('sudo rdmsr 0x198 -p 0 -u --bitfield 47:32') # Processor 0
-    # process.start('sudo rdmsr 0x198 -a -u --bitfield 47:32') # All processors
-    process.waitForStarted()
-    process.waitForFinished()
-    process.waitForReadyRead()
-    voltage = process.readAll()
-    process.close()
+    # process = QProcess()
+    # process.start('sudo rdmsr 0x198 -p 0 -u --bitfield 47:32') # Processor 0
+    # # process.start('sudo rdmsr 0x198 -a -u --bitfield 47:32') # All processors
+    # process.waitForStarted()
+    # process.waitForFinished()
+    # process.waitForReadyRead()
+    # voltage = process.readAll()
+    # process.close()
 
     ## https://askubuntu.com/questions/876286/how-to-monitor-the-vcore-voltage
-    # print(voltage)
-    voltage = int(voltage)/8192
+    voltage_process.start('sudo rdmsr 0x198 -a -u --bitfield 47:32') # All processors 
+    voltage_process.waitForFinished()
+    voltage = voltage_process.readAll()
 
-    global minrecordedVoltage
-    global maxrecordedVoltage
-    if voltage < minrecordedVoltage:
-        minrecordedVoltage = voltage
-    if voltage > maxrecordedVoltage:
-        maxrecordedVoltage = voltage
+    data = [int(line) for line in voltage.data().decode('utf-8').splitlines()]
+    # print(data)
+    avg_v = sum(data) / len(data)
+    voltage = int(avg_v) / 8192
 
-    minmaxVoltages = str("%1.2f" % minrecordedVoltage) + " / " + str("%1.2f" % maxrecordedVoltage)
-    # print(minmaxVoltages)
+    self.voltage = voltage
 
-    self.voltageValue.setText(str("%1.2f" % voltage))
-    self.voltageMinMaxValue.setText(minmaxVoltages)
+    if voltage < self.minrecordedVoltage:
+        self.minrecordedVoltage = voltage
+    if voltage > self.maxrecordedVoltage:
+        self.maxrecordedVoltage = voltage
 
 ##------------------------------##
 ##-------Main QT Window---------##
@@ -162,6 +164,10 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         self.cpuTemp = 0
         self.gpuTemp = 0
         self.sysTemp = 0
+        self.voltage = 0.5
+        self.underVolt = ""
+        self.minrecordedVoltage = 2.0 # V # Max operating voltage for Intel desktop 13th gen
+        self.maxrecordedVoltage = 0 # V
 
         self.powerPluggedIn = False
         self.onBatteryPower = False
@@ -175,6 +181,7 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         self.gpuFanMode = PFS.Auto
         self.KB30Timeout = ECS.KB_30_AUTO_OFF.value
         self.trackpad = ECS.TRACKPADENABLED.value
+        self.batteryChargeLimit = ECS.BATTERYLIMITOFF.value
 
         ## Setup the QT window
         super(MainWindow, self).__init__()
@@ -182,11 +189,13 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
 
         checkUndervoltStatus(self)
         self.ECHandler = ECWrite()
-        self.checkPredatorStatus()
+        self.ECHandler.ec_refresh()
+        
         self.checkPowerTempFan()
+        self.checkPredatorStatus()
         self.setupGUI()
 
-        ## Setup new timer to periodically read the EC regsiters and update UI
+        # Setup new timer to periodically read the EC regsiters and update UI
         self.setUpdateUITimer()
 
     ## ----------------------------------------------------
@@ -220,14 +229,6 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         #     self.trackpadCB.setChecked(True)
         # else:
         #     print("Error read EC register for Trackpad: " + str(self.trackpad))
-
-        ## Set the battery charge indicator
-        if self.batteryChargeLimit == int(ECS.BATTERYLIMITON.value, 0):
-            self.batteryChargeLimitValue.setText("On")
-        elif self.batteryChargeLimit == int(ECS.BATTERYLIMITON.value, 0):
-            self.batteryChargeLimitValue.setText("Off")
-        else:
-            print("Error read EC register for Battery Charge Limit: " + str(self.usbCharging))
     
         ## Set the 30 sec backlight timer
         if self.KB30Timeout == int(ECS.KB_30_AUTO_OFF.value, 0):
@@ -254,10 +255,12 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         ## Set the charge limit indicator
         if self.batteryChargeLimit == int(ECS.BATTERYLIMITON.value, 0):
             self.chargeLimit.setChecked(True)
+            self.batteryChargeLimitValue.setText("On ")
         elif self.batteryChargeLimit == int(ECS.BATTERYLIMITOFF.value, 0):
             self.chargeLimit.setChecked(False)
+            self.batteryChargeLimitValue.setText("Off")
         else:
-            print("Error read EC register for charge limit: " + str(self.usbCharging))            
+            print("Error read EC register for Charge Limit: " + str(self.batteryChargeLimit))                   
 
         self.setPredatorMode()
         self.setFanMode()
@@ -314,10 +317,10 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
 
     # Create a timer to update the UI
     def setUpdateUITimer(self):
-        # print("Setting up timer...")
+        print("Setting up callback timer for %d(ms)" % UPDATE_INTERVAL)
         self.my_timer = QTimer()
         self.my_timer.timeout.connect(self.updatePredatorStatus)
-        self.my_timer.start(1000) #1 sec intervall        
+        self.my_timer.start(UPDATE_INTERVAL)
 
     ## ----------------------------------------------------
     ## Read the various EC registers and update the GUI
@@ -512,7 +515,7 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         elif self.onBatteryPower == int(ECS.BATTERYOFF.value, 0):
             batteryStat = "Battery Not In Use"
         else:
-            print("Error read EC register for Battery Status: " + str(self.predatorMode))
+            print("Error read EC register for Battery Status: " + str(hex(self.onBatteryPower)))
 
         self.batteryStatusValue.setText(batteryStat)
 
@@ -545,6 +548,14 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
     # Update the UI state
     def updatePredatorStatus(self):
         checkVoltage(self)
+        # print(self.voltage)
+        minmaxVoltages = str("%1.2f" % self.minrecordedVoltage) + " / " + str("%1.2f" % self.maxrecordedVoltage)
+        # print(minmaxVoltages)
+        self.voltageValue.setText(str("%1.2f" % self.voltage))
+        self.voltageMinMaxValue.setText(minmaxVoltages)
+
+        self.undervoltStatus.setText(self.undervolt)
+
         self.checkPowerTempFan()
 
         # print(self.cpuMode)
@@ -566,6 +577,13 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         self.setBatteryStatus()
         self.setPredatorMode()
 
+        self.voltageChart.update_data(float("%1.2f" %  self.voltage))
+        self.cpuChart.update_data(self.cpuTemp)
+        self.gpuChart.update_data(self.gpuTemp)
+        self.sysChart.update_data(self.sysTemp)
+        self.cpuFanChart.update_data(self.cpufanspeed)
+        self.gpuFanChart.update_data(self.gpufanspeed)
+
         # print("Sensors: %s, %s, %s, %s, %s, %s, %s" % (str(self.cpufanspeed), str(self.gpufanspeed), 
         #     str(self.cpuTemp), str(self.gpuTemp), str(self.sysTemp), str(self.powerPluggedIn), str(batteryStat)))
 
@@ -583,15 +601,20 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
     ## ----------------------------------------------------
     # Exit the program cleanly
     def shutdown(self):
+        print("Cleaning up..")
         self.ECHandler.shutdownEC()
+        voltage_process.close()
         print("Exiting")
-        exit()
+        # app.exit(0)
+        exit(0)
 
 app = QtWidgets.QApplication(sys.argv)
 application = MainWindow()
 app.setApplicationName("Linux PredatorSense")
 application.setFixedSize(application.WIDTH, application.HEIGHT) # Makes the window not resizeable
 application.setWindowIcon(QtGui.QIcon('app_icon.ico'))
+## Set global window opacity
+# application.setWindowOpacity(0.97)
 
 app.setStyle('Breeze')
 # Dark theme implementation
@@ -609,8 +632,8 @@ palette.setColor(QPalette.BrightText, Qt.red)
 palette.setColor(QPalette.Link, QColor(42, 130, 218))
 palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
 palette.setColor(QPalette.HighlightedText, Qt.black)
-
 app.setPalette(palette)
 
 application.show()
-sys.exit(app.exec())
+app.exec()
+sys.exit()
