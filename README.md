@@ -99,6 +99,7 @@ main.py
 - Updated README to add more documentation on installation.
 
 Mar 11, 2024
+
 ecwrite.py
 - Updated EC class to point to acpi_ec path ( /dev/ec ) instead of the default ( /sys/kernel/debug/ec/ec0/io ) which no longer is supported in Ubuntu.
 - Optimized code to use a buffer to store the contents of the EC register. Load once and read multiple times per update cycle.
