@@ -1,4 +1,4 @@
-## PredatorSense? clone for ```PH315-54-760S```
+## PredatorSense™ clone for ```PH315-54-760S```
 ### Controls fan speed, gaming modes and undervolting on Linux. This application is intended for Acer Predator Helios 300 (2021) model.
 
 ![Predator Sense](LinuxPredatorSense.png)
