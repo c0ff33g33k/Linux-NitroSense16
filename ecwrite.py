@@ -19,7 +19,8 @@ class ECWrite:
             print('Run with sudo')
             exit(1)
         except FileNotFoundError:
-            print(ec_path, 'not found. Creating the EC IO file...')
+            print(self.ec_path, 'not found. Check acpi_ec')
+            exit(1)
             # from subprocess import Popen
             # Popen(['modprobe', 'ec_sys', 'write_support=1'])
             # print('EC Changed. Restarting the application may help if it is not working.')
@@ -32,16 +33,6 @@ class ECWrite:
             self.ec_file.seek(address)
             self.ec_file.write(bytearray([value]))
 
-            # self.ec_file.read()
-            # self.ec_file.seek(address)
-            # old_value = ord(self.ec_file.read(1))
-            # if value != old_value:
-            #     print("Before: %3d\tAfter: %3d" % (old_value, value))
-            #     self.ec_file.seek(address)
-            #     self.ec_file.write(bytearray([value]))
-            # else:
-            #     print("Value was not changed: %s, %3d" % (hex(address), value))
-            #     print("Before: %3d\tAfter: %3d" % (old_value, value))
         except Exception as e:
             print("Error: " + str(e))
             exit(1)
@@ -67,7 +58,7 @@ class ECWrite:
             # return ord(self.ec_file.read(1))
 
             if self.buffer == b'':
-                print("BUFFER EMPTY")
+                print("BUFFER EMPTY!")
                 exit(1)
 
             return self.buffer[address]

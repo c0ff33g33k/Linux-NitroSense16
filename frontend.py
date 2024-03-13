@@ -115,7 +115,7 @@ class CustomChart:
         axis_x.setRange(*axis_x_range)
         # axis_x.setLabelsVisible(False)
         axis_x.setLabelsFont(QtGui.QFont("Arial", 6))
-        axis_x.setTickCount(sample_count / 4)
+        axis_x.setTickCount(int(sample_count / 4))
 
         axis_y = self.chart.axes(QtCore.Qt.Vertical)[0]
         axis_y.setTitleText(axis_y_label)

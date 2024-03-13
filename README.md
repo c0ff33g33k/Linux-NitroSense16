@@ -1,68 +1,102 @@
-## PredatorSense™ clone for ```PH315-54-760S```
-### Controls fan speed, gaming modes and undervolting on Linux. This application is intended for Acer Predator Helios 300 (2021) model
+## PredatorSense? clone for ```PH315-54-760S```
+### Controls fan speed, gaming modes and undervolting on Linux. This application is intended for Acer Predator Helios 300 (2021) model.
 
 ![Predator Sense](LinuxPredatorSense.png)
 
 ## Disclaimer:
-* Secure Boot is **not** supported.
+* Secure Boot **IS** \* supported if you only use the ```acpi_ec``` package.
+* Secure Boot is **NOT** \* supported if you want to control CPU voltage offsets using the ```msr-tools``` and ```undervolt``` packages.
 * Using this application with other laptops may potentially damage them. Proceed at your discretion.
 
-## Usage:
-- ```sudo``` is required in order to access the Super I/O EC registers and apply undervolt offsets
+## Install:
+- From the command line
+```
+git clone https://github.com/snowyoneill/Linux-PredatorSense/
+cd Linux-PredatorSense/
+``` 
 
-- First make sure to set the ```UNDERVOLT_PATH``` in ```main.py``` to the appropriate location of the undervolt package
-  - If you installed without sudo you can find where undervolt is located by doing
+## Usage:
+### COMMAND LINE  
+ - ```sudo``` is required in order to access the Super I/O EC registers and apply undervolt offsets.
+  - From the command line run the main script as root:
+  ```
+  sudo python3 main.py
+  ```
+
+_[OPTIONAL]_
+- Make sure to set the ```UNDERVOLT_PATH``` in ```main.py``` to the appropriate location of the undervolt package.
+  - If you installed without sudo you can find where undervolt is located by doing.
     ```
     which undervolt
     ```
-  - Next set ```COREOFFSET``` and ```CACHEOFFSET``` to the mV that you determined to be stable via throttlestop on windows
+  - Next set ```COREOFFSET``` and ```CACHEOFFSET``` to the mV that you determined to be stable via throttlestop on windows.
 
- - From the command line you can run the main script as root:
-```
-sudo python main.py
-```
+### ICON
+ - Alternatively you can copy the .desktop file to your applications folder and launch the program via it's icon.
+  - Open ```predator-sense.desktop``` in a text editor.
+  - Set ```<path_to_PredatorSense>``` to the directory where you downloaded this project.
+  ```
+  Exec=sh -c "pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY sh -c 'cd <path_to_PredatorSense> && python3 main.py'"
+  Icon=<path_to_PredatorSense>/app_icon.ico
+  ```
+  - Copy the file to the application directory
+  ```
+  sudo cp predator-sense.desktop /usr/share/applications/
+  ```
+  - Now launch via the application and on initialization it will prompt for the user password.
 
- - **YOU MAY NEED TO RESTART NVIDIA-POWERD SERVICE IN ORDER TO DETECT NEW TGP**
-
- ```
- sudo systemctl restart nvidia-powerd
- ```
-
-### Alternatively you can copy the .desktop file to your applications folder and launch it via it's icon
-
-You will need to update these 2 lines first to point to the correct program directory
- - Set <path_to_PredatorSense> to the directory where you downloaded this project
+### NVIDIA-POWERD
+- After switching predator modes \* **YOU MAY NEED TO RESTART NVIDIA-POWERD SERVICE IN ORDER TO DETECT NEW TGP** \*
 ```
-Exec=sh -c "pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY sh -c 'cd <path_to_PredatorSense> && python3 main.py'"
-Icon=<path_to_PredatorSense>/app_icon.ico
+sudo systemctl restart nvidia-powerd
+``` 
+- You can check the current GPU TGP via
 ```
- - Copy the file to the application directory
-
+nvidia-smi
 ```
-sudo cp predator-sense.desktop /usr/share/applications/
-```
- - Now launch via the application and on initialization it will prompt for the user password
 
 ## Dependencies:
 * Ubuntu / Linux Mint:
-```
-sudo apt install python3-pip
-pip install qtpy
-pip install git+https://github.com/georgewhewell/undervolt.git
-sudo apt-get install msr-tools
-```
+  ```
+  sudo apt-get install python3-pyqt5, python3-pyqt5.qtchart
+  ```
 
-Newer versions of Ubuntu have removed access to the EC registers via the ```ec_sys``` module so make sure you install the alternative ```acpi_ec```
+  ```
+  git clone https://github.com/musikid/acpi_ec/
+  cd acpi_ec
+  sudo ./install.sh
+  modprobe acpi_ec
+  sudo cat /dev/ec #confirm access to EC
+  ```
+
+  ```
+  [OPTIONAL]
+  pip install git+https://github.com/georgewhewell/undervolt.git
+  sudo apt-get install msr-tools
+  ```
 
 Packages:
 * ```Python Qt5``` -> [PyQt5](https://pypi.org/project/PyQt5/)
+* ```acpi_ec``` -> [acpi_ec by musikid](https://github.com/musikid/acpi_ec/)
 * ```undervolt``` -> [Undervolt by georgewhewell](https://github.com/georgewhewell/undervolt)
 * ```msr-tools``` -> [msr-tools by intel](https://github.com/intel/msr-tools)
-* ```acpi_ec``` -> [acpi_ec by musikid](https://github.com/musikid/acpi_ec/)
 
 ## This is a fork of [PredatorSense by mohsunb](https://github.com/mohsunb/PredatorSense), customized for ```PH315-54```
 
 ## Changelog:
+
+Mar 12, 2024
+
+ecwrite_py
+- If access to the EC cannot be obtained then the app will now shutdown.
+
+frontend.py
+- Bug fix, cast tick internal value to int.
+
+main.py
+- If an empty string is returned when querying the voltage, skip updating. Prevents crashes when msr-tools is not installed.
+
+- Updated README to add more documentation on installation.
 
 Mar 11, 2024
 ecwrite.py

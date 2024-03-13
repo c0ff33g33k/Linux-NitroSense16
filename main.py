@@ -141,17 +141,18 @@ def checkVoltage(self):
     voltage_process.waitForFinished()
     voltage = voltage_process.readAll()
 
-    data = [int(line) for line in voltage.data().decode('utf-8').splitlines()]
-    # print(data)
-    avg_v = sum(data) / len(data)
-    voltage = int(avg_v) / 8192
+    if voltage:
+        data = [int(line) for line in voltage.data().decode('utf-8').splitlines()]
+        # print(data)
+        avg_v = sum(data) / len(data)
+        voltage = int(avg_v) / 8192
 
-    self.voltage = voltage
+        self.voltage = voltage
 
-    if voltage < self.minrecordedVoltage:
-        self.minrecordedVoltage = voltage
-    if voltage > self.maxrecordedVoltage:
-        self.maxrecordedVoltage = voltage
+        if voltage < self.minrecordedVoltage:
+            self.minrecordedVoltage = voltage
+        if voltage > self.maxrecordedVoltage:
+            self.maxrecordedVoltage = voltage
 
 ##------------------------------##
 ##-------Main QT Window---------##
