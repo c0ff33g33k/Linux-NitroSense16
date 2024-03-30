@@ -94,7 +94,7 @@ nvidia-smi
   ```
   [OPTIONAL]
   pip install git+https://github.com/georgewhewell/undervolt.git
-  sudo apt-get install msr-tools
+  sudo dnf install msr-tools
   ```
 
 Packages:
