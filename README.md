@@ -74,6 +74,28 @@ nvidia-smi
   pip install git+https://github.com/georgewhewell/undervolt.git
   sudo apt-get install msr-tools
   ```
+* Fedora:
+  ```
+  sudo dnf install python3-qt5
+  sudo dnf install python3-pyqtchart
+  ```
+  Make sure SecureBoot is off.
+
+  ```
+  sudo dnf install dkms
+  
+  git clone https://github.com/musikid/acpi_ec/
+  cd acpi_ec
+  sudo ./install.sh
+  modprobe acpi_ec
+  sudo cat /dev/ec #confirm access to EC
+  ```
+
+  ```
+  [OPTIONAL]
+  pip install git+https://github.com/georgewhewell/undervolt.git
+  sudo dnf install msr-tools
+  ```
 
 Packages:
 * ```Python Qt5``` -> [PyQt5](https://pypi.org/project/PyQt5/)
