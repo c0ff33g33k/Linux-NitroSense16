@@ -16,8 +16,8 @@ from PyQt5.QtCore import Qt
 
 stylesheet = '''
 QWidget #tab, #monitoring_tab {
-    /* border-image: url(PredatorLogo.png) 0 0 0 0 stretch stretch */
-    background-image: url(PredatorLogo.png);
+    /* border-image: url(NitroLogo.png) 0 0 0 0 stretch stretch */
+    background-image: url(NitroLogo.png);
     background-repeat: no-repeat;
     background-position: top center;
     background-color: #252525;
@@ -37,7 +37,7 @@ QGroupBox#monitoring_box {
 }
 
 QGroupBox #powerStatusLabel, #batteryStatusLabel, #batteryChargeLimitLabel, 
-#predatorModeLabel, #cpuTempLabel, #gpuTempLabel, #sysTempLabel, #cpuFanSpeedLabel, 
+#nitroModeLabel, #cpuTempLabel, #gpuTempLabel, #sysTempLabel, #cpuFanSpeedLabel, 
 #gpuFanSpeedLabel, #voltageLabel, #voltageMinMaxLabel, #voltageAverageLabel {
     color: gray;
 }
@@ -59,7 +59,7 @@ class CustomChart:
         axis_x_label="Samples",
         axis_y_label="Voltage",
         axis_x_range=(0, 64),
-        axis_y_range=(0.5, 1.2),
+        axis_y_range=(0.7, 1.6),
         **chart_kwargs,
     ):
         print(title, objectName, sample_count, area_series_color, line_series_color, axis_x_label, axis_y_label, axis_x_range, axis_y_range)
@@ -167,18 +167,18 @@ class CustomChart:
         self.lineSeriesShadow.append(20, sample)
 
 
-class Ui_PredatorSense(object):
+class Ui_NitroSense(object):
 
     WIDTH = 480
     HEIGHT = 680
 
-    def setupUI(self, PredatorSense):
+    def setupUI(self, NitroSense):
 
         ## Create window
-        PredatorSense.setObjectName("PredatorSense")
-        PredatorSense.setWindowTitle("Predator Sense™")
-        PredatorSense.setWindowModality(QtCore.Qt.NonModal)
-        # PredatorSense.resize(self.WIDTH, self.HEIGHT)
+        NitroSense.setObjectName("NitroSense")
+        NitroSense.setWindowTitle("Nitro Sense™")
+        NitroSense.setWindowModality(QtCore.Qt.NonModal)
+        # NitroSense.resize(self.WIDTH, self.HEIGHT)
         
         ##-------Fan Control Tab--------##
 
@@ -193,7 +193,7 @@ class Ui_PredatorSense(object):
         boldfont.setWeight(QtGui.QFont.Black)
         # boldfont.setPointSize(12)
 
-        self.fan_control_tab = QtWidgets.QTabWidget(PredatorSense)
+        self.fan_control_tab = QtWidgets.QTabWidget(NitroSense)
         self.fan_control_tab.setGeometry(QtCore.QRect(0, 0, self.WIDTH, self.HEIGHT))
         # sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         # sizePolicy.setHorizontalStretch(0)
@@ -201,14 +201,14 @@ class Ui_PredatorSense(object):
         # sizePolicy.setHeightForWidth(self.fan_control_tab.sizePolicy().hasHeightForWidth())
         # self.fan_control_tab.setSizePolicy(sizePolicy)
         self.fan_control_tab.setFont(font)
-        self.fan_control_tab.setAccessibleName("Predator Sense")
+        self.fan_control_tab.setAccessibleName("Nitro Sense")
         self.fan_control_tab.setObjectName("tabWidget")
 
-        self.tab = QtWidgets.QWidget(PredatorSense)
+        self.tab = QtWidgets.QWidget(NitroSense)
         self.tab.setGeometry(QtCore.QRect(0, 0, self.WIDTH, self.HEIGHT))
         self.tab.setObjectName("tab")
 
-        self.monitoring_tab = QtWidgets.QWidget(PredatorSense)
+        self.monitoring_tab = QtWidgets.QWidget(NitroSense)
         # self.monitoring_tab.setGeometry(QtCore.QRect(0, 0, self.WIDTH, 650))
         self.monitoring_tab.setObjectName("monitoring_tab")
         
@@ -216,7 +216,7 @@ class Ui_PredatorSense(object):
         self.fan_control_tab.addTab(self.tab, "Home")
         self.fan_control_tab.addTab(self.monitoring_tab, "Monitoring")
         # self.fan_control_tab.setCurrentIndex(1)
-        # self.fan_control_tab.setTabText(self.fan_control_tab.indexOf(self.tab), "PredatorSense")        
+        # self.fan_control_tab.setTabText(self.fan_control_tab.indexOf(self.tab), "NitroSense")        
 
         self.tab.setStyleSheet(stylesheet)
         self.monitoring_tab.setStyleSheet(stylesheet)
@@ -224,11 +224,11 @@ class Ui_PredatorSense(object):
         ##------------ Label-------------##
 
         # #PREDATORTITLE
-        # self.predatorTitle = QtWidgets.QLabel(self.tab)
-        # self.predatorTitle.setObjectName("predatorTitle")
-        # self.predatorTitle.setText("PredatorSense")
-        # self.predatorTitle.move(150, 5)
-        # self.predatorTitle.setFont(QtGui.QFont("TT Squares", 18, QtGui.QFont.Bold))
+        # self.nitroTitle = QtWidgets.QLabel(self.tab)
+        # self.nitroTitle.setObjectName("nitroTitle")
+        # self.nitroTitle.setText("NitroSense")
+        # self.nitroTitle.move(150, 5)
+        # self.nitroTitle.setFont(QtGui.QFont("TT Squares", 18, QtGui.QFont.Bold))
 
         ##------------Status-------------##
 
@@ -264,27 +264,27 @@ class Ui_PredatorSense(object):
         self.batteryChargeLimitValue.setObjectName("batteryChargeLimitValue")
         self.batteryChargeLimitValue.move(125, 55)
 
-        # PREDATORMODE
-        self.predatorModeLabel = QtWidgets.QLabel(self.status_box)
-        self.predatorModeLabel.setObjectName("predatorModeLabel")
-        self.predatorModeLabel.setText("Predator Mode:")
-        self.predatorModeLabel.move(10, 75)
-        self.predatorModeValue = QtWidgets.QLabel(self.status_box)
-        self.predatorModeValue.setObjectName("predatorModeValue")
-        self.predatorModeValue.move(125, 75)
-        self.predatorModeValue.setText("Extreme")
+        # NITROMODE
+        self.nitroModeLabel = QtWidgets.QLabel(self.status_box)
+        self.nitroModeLabel.setObjectName("nitroModeLabel")
+        self.nitroModeLabel.setText("Nitro Mode:")
+        self.nitroModeLabel.move(10, 75)
+        self.nitroModeValue = QtWidgets.QLabel(self.status_box)
+        self.nitroModeValue.setObjectName("nitroModeValue")
+        self.nitroModeValue.move(125, 75)
+        self.nitroModeValue.setText("Extreme")
 
         self.powerStatusLabel.setFont(boldfont)
         self.batteryStatusLabel.setFont(boldfont)
         self.batteryChargeLimitLabel.setFont(boldfont)
-        self.predatorModeLabel.setFont(boldfont)
+        self.nitroModeLabel.setFont(boldfont)
         
         self.powerStatusValue.setFont(font)
         self.batteryStatusValue.setFont(font)
         self.batteryChargeLimitValue.setFont(font)
-        self.predatorModeValue.setFont(font)
+        self.nitroModeValue.setFont(font)
 
-        ##---------Predator Mode---------##
+        ##---------Nitro Mode---------##
 
         self.predMode = QtWidgets.QGroupBox(self.tab)
         self.predMode.setGeometry(QtCore.QRect(370, 40, 90, 100))
@@ -306,11 +306,6 @@ class Ui_PredatorSense(object):
         self.extremeModeCB.setObjectName("extremeModeCB")
         self.extremeModeCB.move(10, 55)
 
-        self.turboModeCB = QtWidgets.QRadioButton(self.predMode)
-        self.turboModeCB.setFont(font)
-        self.turboModeCB.setObjectName("turboModeCB")
-        self.turboModeCB.move(10, 75)
-
         ##-------------Misc--------------##
 
         self.KB_box = QtWidgets.QGroupBox(self.tab)
@@ -322,11 +317,6 @@ class Ui_PredatorSense(object):
         self.KBTimerCB.setFont(font)
         self.KBTimerCB.setObjectName("global_KBTimer")
         self.KBTimerCB.move(10, 10)
-
-        self.LCDOverdriveCB = QtWidgets.QCheckBox(self.KB_box)
-        self.LCDOverdriveCB.setFont(font)
-        self.LCDOverdriveCB.setObjectName("LCDOverdrive")
-        self.LCDOverdriveCB.move(10, 25)
 
         # self.trackpadCB = QtWidgets.QCheckBox(self.KB_box)
         # self.trackpadCB.setFont(font)
@@ -603,11 +593,18 @@ class Ui_PredatorSense(object):
         self.exit_button.setObjectName("pushButton")
         self.exit_button.setText("Exit")
 
-        self.reset_button = QtWidgets.QPushButton(self.tab)
-        self.reset_button.setGeometry(QtCore.QRect(int(self.WIDTH/2-40), 440, 80, 25))
-        self.reset_button.setFont(font)
-        self.reset_button.setObjectName("restPushButton")
-        self.reset_button.setText("Reset")  
+        # self.reset_button = QtWidgets.QPushButton(self.tab)
+        # self.reset_button.setGeometry(QtCore.QRect(int(self.WIDTH/2-40), 440, 80, 25))
+        # self.reset_button.setFont(font)
+        # self.reset_button.setObjectName("restPushButton")
+        # self.reset_button.setText("Reset")  
+
+        # Undervolt selection dropdown with 100mv steps from 0mv to 600mv
+        self.undervolt_dropdown = QtWidgets.QComboBox(self.tab)
+        self.undervolt_dropdown.setGeometry(QtCore.QRect(int(self.WIDTH/2-40), 440, 80, 25))
+        self.undervolt_dropdown.setFont(font)
+        self.undervolt_dropdown.setObjectName("undervoltComboBox")
+        self.undervolt_dropdown.addItems(["0mV", "-100mV", "-200mV", "-300mV", "-400mV", "-500mV", "-600mV", "-700mV"])
 
         self.undervolt_button = QtWidgets.QPushButton(self.tab)
         self.undervolt_button.setGeometry(QtCore.QRect(int(self.WIDTH/2-40), 465, 80, 25))
@@ -617,7 +614,7 @@ class Ui_PredatorSense(object):
 
         ##--------MONITORING TAB--------##
 
-        self.voltageChart = CustomChart("Voltage", "voltage_box", 64, "#80ff0000", "#E74C3C", "", "", (0, 63), (0.5, 1.2))
+        self.voltageChart = CustomChart("Voltage", "voltage_box", 64, "#80ff0000", "#E74C3C", "", "", (0, 63), (0.7, 1.6))
         self.cpuChart = CustomChart("CPU Temp", "cpuchart_box", 64, "#800000ff", "#0E86D4", "", "", (0, 63), (0, 110))
         self.gpuChart = CustomChart("GPU Temp", "gpuchart_box", 64, "#8000ff00", "#0E8600", "", "", (0, 63), (0, 110))
         self.sysChart = CustomChart("SYS Temp", "syschart_box", 64, "#8000ffff", "#0Effff", "", "", (0, 63), (0, 110))
@@ -676,29 +673,28 @@ class Ui_PredatorSense(object):
         # self.cpu_turbo.toggled['bool'].connect(self.gpu_turbo.setDisabled)
         # self.gpu_turbo.toggled['bool'].connect(self.cpu_turbo.setDisabled)
 
-        # QtCore.QMetaObject.connectSlotsByName(PredatorSense)
+        # QtCore.QMetaObject.connectSlotsByName(NitroSense)
 
         ## ----------------------------------------------------
         # Set button text and window titles 
 
         # Window title
-        PredatorSense.setWindowTitle("Linux PredatorSense")
+        NitroSense.setWindowTitle("Linux NitroSense")
 
         ## CoolBoost checkbox
-        # self.coolboost_checkbox.setToolTip(_translate("PredatorSense", "Only Works When In Auto Mode"))
-        # self.coolboost_checkbox.setText(_translate("PredatorSense", "CoolBoost™"))
+        # self.coolboost_checkbox.setToolTip(_translate("NitroSense", "Only Works When In Auto Mode"))
+        # self.coolboost_checkbox.setText(_translate("NitroSense", "CoolBoost™"))
 
         # Power Status
         self.powerStatusValue.setText("0")
         self.batteryStatusValue.setText("Battery Not In Use")
         self.batteryChargeLimitValue.setText("Off")
-        self.predatorModeValue.setText("Default")
+        self.nitroModeValue.setText("Default")
 
         self.predMode.setTitle("Mode")
         self.quietModeCB.setText("Quiet")
         self.defaultModeCB.setText("Default")
         self.extremeModeCB.setText("Extreme")
-        self.turboModeCB.setText("Turbo")    
 
         # Fan box
         self.fan_box.setTitle("Fan RPM")
@@ -715,7 +711,6 @@ class Ui_PredatorSense(object):
         # Misc box
         self.KB_box.setTitle("Misc")
         self.KBTimerCB.setText("KB Timeout")
-        self.LCDOverdriveCB.setText("LCD Overdrive")
         # self.trackpadCB.setText("Disable Trackpad")
         self.usbChargingCB.setText("USB Charging")
         self.chargeLimit.setText("Charge Limit")
@@ -746,5 +741,5 @@ class Ui_PredatorSense(object):
         self.gpu_manual.setText("Manual")
         self.gpu_turbo.setText("Max speed")
 
-    # def updateUI(self, PredatorSense, cpufanspeed, gpufanspeed, cpuTemp, gpuTemp, sysTemp, power, battery, mode, modeCB):
+    # def updateUI(self, NitroSense, cpufanspeed, gpufanspeed, cpuTemp, gpuTemp, sysTemp, power, battery, mode, modeCB):
         # return

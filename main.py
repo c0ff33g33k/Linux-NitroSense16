@@ -7,37 +7,29 @@ from PyQt5.QtCore import Qt, QTimer, QProcess
 from PyQt5.QtGui import QPalette, QColor
 
 
-from frontend import Ui_PredatorSense
+from frontend import Ui_NitroSense
 from ecwrite import *
 import enum
 
 ##------------------------------##
-##--Predator EC Register Class--##
+##--Nitro EC Register Class--##
 # ECState
 class ECS(enum.Enum):
-    # COOL_BOOST_CONTROL = '0x10'
-    # COOL_BOOST_ON = '0x01'
-    # COOL_BOOST_OFF = '0x00'
-
     GPU_FAN_MODE_CONTROL = '0x21'
-    GPU_AUTO_MODE = '0x50'
-    GPU_TURBO_MODE = '0x60'
-    GPU_MANUAL_MODE = '0x70'
+    GPU_AUTO_MODE = '0x10'
+    GPU_TURBO_MODE = '0x20'
+    GPU_MANUAL_MODE = '0x30'
     GPU_MANUAL_SPEED_CONTROL = '0x3A'
 
     CPU_FAN_MODE_CONTROL = '0x22'
-    CPU_AUTO_MODE = '0x54'
-    CPU_TURBO_MODE = '0x58'
-    CPU_MANUAL_MODE = '0x5C'
+    CPU_AUTO_MODE = '0x04'
+    CPU_TURBO_MODE = '0x08'
+    CPU_MANUAL_MODE = '0x0C'
     CPU_MANUAL_SPEED_CONTROL = '0x37'
 
     KB_30_SEC_AUTO = '0x06'
     KB_30_AUTO_OFF = '0x00'
     KB_30_AUTO_ON = '0x1E'
-
-    TURBO_LED_CONTROL = '0x5B'
-    TURBO_LED_ON = '0x01'
-    TURBO_LED_OFF = '0x00'
 
     CPUFANSPEEDHIGHBITS = '0x13'
     CPUFANSPEEDLOWBITS = '0x14'
@@ -45,7 +37,7 @@ class ECS(enum.Enum):
     GPUFANSPEEDLOWBITS = '0x16'
 
     CPUTEMP = '0xB0'
-    GPUTEMP = '0xB7'
+    GPUTEMP = '0xB6'
     SYSTEMP = '0xB3'
 
     POWERSTATUS = '0x00'
@@ -65,20 +57,17 @@ class ECS(enum.Enum):
     USBCHARGINGON = '0x0F'
     USBCHARGINGOFF = '0x1F'
 
-    LCDOVERDRIVE = '0x21' # (0x_0 = off, 0x_8 = on) - high bit
-
-    PREDATORMODE = '0x2C'
+    NITROMODE = '0x2C'
     QUIETMODE = '0x00'
     DEFAULTMODE = '0x01'
     EXTREMEMODE = '0x04'
-    TURBOMODE = '0x05'
 
     TRACKPADSTATUS = '0xA1'
     TRACKPADENABLED = '0x00'
     TRACKPADDISABLED = '0x04'
 
 ##------------------------------##
-##-------Predator Fan Mode------##
+##-------Nitro Fan Mode------##
 # ProcessorFanState
 class PFS(enum.Enum):  
     Manual = 0
@@ -87,16 +76,15 @@ class PFS(enum.Enum):
 
 ##------------------------------##
 ##---------Undervolting---------##
-UNDERVOLT_PATH = "<user_path>/.local/lib/python3.8/site-packages/undervolt.py"
+UNDERVOLT_PATH = "/usr/bin/undervolt"
 
-COREOFFSET = 80 # mV
-CACHEOFFSET = 80 # mV
+COREOFFSET = 100 # mV
 UPDATE_INTERVAL = 1000 #1 sec interval
 
 ## Read the current undervoltage offsets
 def checkUndervoltStatus(self):
     process = QProcess()
-    process.start('sudo python ' + UNDERVOLT_PATH + ' -r')
+    process.start('sudo amdctl -g -c0')
     #process.waitForStarted()
     process.waitForFinished()
     #process.waitForReadyRead()
@@ -104,13 +92,18 @@ def checkUndervoltStatus(self):
     process.close()
     
     underVoltStatus = str(underVoltStatus, 'utf-8')
+    underVoltStatus = underVoltStatus.splitlines()[3:]
+    underVoltStatus = '\n'.join(underVoltStatus)
     # print(underVoltStatus)
     self.undervolt = underVoltStatus
 
 ## Apply the undervoltage offsets values
-def applyUndervolt(self, core, cache):
+def applyUndervolt(self):
     process = QProcess()
-    process.start('sudo python ' + UNDERVOLT_PATH + ' --core -' + str(core) + ' --cache -' + str(cache))
+    core = self.undervolt_dropdown.currentIndex()
+    vid = core * 16
+    if (vid == 0): vid = 1
+    process.start(f"sudo amdctl -v{vid}")
     #process.waitForStarted()
     process.waitForFinished()
     #process.waitForReadyRead()
@@ -137,26 +130,32 @@ def checkVoltage(self):
     # process.close()
 
     ## https://askubuntu.com/questions/876286/how-to-monitor-the-vcore-voltage
-    voltage_process.start('sudo rdmsr 0x198 -a -u --bitfield 47:32') # All processors 
+    voltage_process.start("sudo amdctl -g") # All processors 
     voltage_process.waitForFinished()
     voltage = voltage_process.readAll()
+    voltage = str(voltage, 'utf-8').splitlines()
+    voltages = []
+    for line in voltage:
+        if "mV" in line:
+            line = line.split(" ")
+            for comp in line:
+                if "mV" in comp:
+                    voltages.append(int(comp.replace("mV", ""))/1000)
+    
 
-    if voltage:
-        data = [int(line) for line in voltage.data().decode('utf-8').splitlines()]
-        # print(data)
-        avg_v = sum(data) / len(data)
-        voltage = int(avg_v) / 8192
+    if voltages:
+        avg_v = sum(voltages) / len(voltages)
 
-        self.voltage = voltage
+        self.voltage = avg_v
 
-        if voltage < self.minrecordedVoltage:
-            self.minrecordedVoltage = voltage
-        if voltage > self.maxrecordedVoltage:
-            self.maxrecordedVoltage = voltage
+        if avg_v < self.minrecordedVoltage:
+            self.minrecordedVoltage = avg_v
+        if avg_v > self.maxrecordedVoltage:
+            self.maxrecordedVoltage = avg_v
 
 ##------------------------------##
 ##-------Main QT Window---------##
-class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
+class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
 
     def __init__(self):
         self.turboEnabled = False
@@ -173,7 +172,7 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         self.powerPluggedIn = False
         self.onBatteryPower = False
         self.displayOverdrive = False
-        self.predatorMode = ECS.DEFAULTMODE.value
+        self.nitroMode = ECS.DEFAULTMODE.value
         self.usbCharging = ECS.USBCHARGINGON.value
 
         self.cpuMode = ECS.CPU_AUTO_MODE.value
@@ -193,7 +192,7 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         self.ECHandler.ec_refresh()
         
         self.checkPowerTempFan()
-        self.checkPredatorStatus()
+        self.checkNitroStatus()
         self.setupGUI()
 
         # Setup new timer to periodically read the EC regsiters and update UI
@@ -218,8 +217,8 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         self.cpuManualSlider.valueChanged.connect(self.cpumanual)
         self.gpuManualSlider.valueChanged.connect(self.gpumanual)
         self.exit_button.clicked.connect(self.shutdown)
-        self.reset_button.clicked.connect(lambda: applyUndervolt(self, 0, 0))
-        self.undervolt_button.clicked.connect(lambda: applyUndervolt(self, COREOFFSET, CACHEOFFSET))
+        #self.reset_button.clicked.connect(lambda: applyUndervolt(self, 0, 0))
+        self.undervolt_button.clicked.connect(lambda: applyUndervolt(self))
 
         ## ----------------------------------------------------
 
@@ -237,13 +236,6 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         else:
             self.KBTimerCB.setChecked(True)
 
-        ## Set the LCD overdrive indicator
-        # Check if the lower 4 bits equals 8
-        overdriveEnabled = self.displayOverdrive & (1 << 3)
-        if overdriveEnabled == 0:
-            self.LCDOverdriveCB.setChecked(False)
-        else:
-            self.LCDOverdriveCB.setChecked(True)
 
         ## Set the USB charging indicator
         if self.usbCharging == int(ECS.USBCHARGINGON.value, 0):
@@ -263,7 +255,7 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         else:
             print("Error read EC register for Charge Limit: " + str(self.batteryChargeLimit))                   
 
-        self.setPredatorMode()
+        self.setNitroMode()
         self.setFanMode()
 
         ## ----------------------------------------------------
@@ -271,11 +263,8 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         self.quietModeCB.clicked['bool'].connect(self.setQuietMode)
         self.defaultModeCB.clicked['bool'].connect(self.setDefaultMode)
         self.extremeModeCB.clicked['bool'].connect(self.setExtremeMode)
-        self.turboModeCB.clicked['bool'].connect(self.setTurboMode)
-
         # self.trackpadCB.clicked['bool'].connect(self.toggletrackpad)
         self.KBTimerCB.clicked['bool'].connect(self.togglekbauto)
-        self.LCDOverdriveCB.clicked['bool'].connect(self.toggleLCDOverdrive)
         self.usbChargingCB.clicked['bool'].connect(self.toggleUSBCharging)
         self.chargeLimit.clicked['bool'].connect(self.togglePowerLimit)
 
@@ -313,26 +302,25 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
             self.global_turbo.setChecked(True)
             self.cpu_turbo.setChecked(True)
             self.gpu_turbo.setChecked(True)
-            self.predatorMode = int(ECS.TURBOMODE.value, 0) 
+            self.nitroMode = int(ECS.EXTREMEMODE.value, 0) 
             self.setTurboMode()
 
     # Create a timer to update the UI
     def setUpdateUITimer(self):
         print("Setting up callback timer for %d(ms)" % UPDATE_INTERVAL)
         self.my_timer = QTimer()
-        self.my_timer.timeout.connect(self.updatePredatorStatus)
+        self.my_timer.timeout.connect(self.updateNitroStatus)
         self.my_timer.start(UPDATE_INTERVAL)
 
     ## ----------------------------------------------------
     ## Read the various EC registers and update the GUI
-    def checkPredatorStatus(self):
+    def checkNitroStatus(self):
         # self.cb = self.ECHandler.ec_read(int(COOL_BOOST_CONTROL, 0)) == 1
         self.cpuMode = self.ECHandler.ec_read(int(ECS.CPU_FAN_MODE_CONTROL.value, 0))
         self.gpuMode = self.ECHandler.ec_read(int(ECS.GPU_FAN_MODE_CONTROL.value, 0))
         self.KB30Timeout = self.ECHandler.ec_read(int(ECS.KB_30_SEC_AUTO.value, 0))
         self.usbCharging = self.ECHandler.ec_read(int(ECS.POWEROFFUSBCHARGING.value, 0))
-        self.displayOverdrive = self.ECHandler.ec_read(int(ECS.LCDOVERDRIVE.value, 0))
-        self.predatorMode = self.ECHandler.ec_read(int(ECS.PREDATORMODE.value, 0))
+        self.nitroMode = self.ECHandler.ec_read(int(ECS.NITROMODE.value, 0))
         self.batteryChargeLimit = self.ECHandler.ec_read(int(ECS.BATTERYCHARGELIMIT.value, 0))
         self.trackpad = self.ECHandler.ec_read(int(ECS.TRACKPADSTATUS.value, 0))
 
@@ -352,7 +340,7 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         self.gpuMode = self.ECHandler.ec_read(int(ECS.GPU_FAN_MODE_CONTROL.value, 0))
         self.powerPluggedIn = self.ECHandler.ec_read(int(ECS.POWERSTATUS.value, 0))
         self.onBatteryPower = self.ECHandler.ec_read(int(ECS.BATTERYSTATUS.value, 0))
-        self.predatorMode = self.ECHandler.ec_read(int(ECS.PREDATORMODE.value, 0))
+        self.nitroMode = self.ECHandler.ec_read(int(ECS.NITROMODE.value, 0))
         self.batteryChargeLimit = self.ECHandler.ec_read(int(ECS.BATTERYCHARGELIMIT.value, 0))
 
         self.cpuTemp = self.ECHandler.ec_read(int(ECS.CPUTEMP.value, 0))
@@ -374,19 +362,19 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
 
     ## ---------Radio Button callback functions------------
     def setQuietMode(self):
-        self.ECHandler.ec_write(int(ECS.PREDATORMODE.value, 0), int(ECS.QUIETMODE.value, 0))
+        self.ECHandler.ec_write(int(ECS.NITROMODE.value, 0), int(ECS.QUIETMODE.value, 0))
         self.setGlobalAuto()
 
     def setDefaultMode(self):
-        self.ECHandler.ec_write(int(ECS.PREDATORMODE.value, 0), int(ECS.DEFAULTMODE.value, 0))
+        self.ECHandler.ec_write(int(ECS.NITROMODE.value, 0), int(ECS.DEFAULTMODE.value, 0))
         self.setGlobalAuto() 
 
     def setExtremeMode(self):
-        self.ECHandler.ec_write(int(ECS.PREDATORMODE.value, 0), int(ECS.EXTREMEMODE.value, 0))
+        self.ECHandler.ec_write(int(ECS.NITROMODE.value, 0), int(ECS.EXTREMEMODE.value, 0))
         self.setGlobalAuto()
 
     def setTurboMode(self):
-        self.ECHandler.ec_write(int(ECS.PREDATORMODE.value, 0), int(ECS.TURBOMODE.value, 0))
+        self.ECHandler.ec_write(int(ECS.NITROMODE.value, 0), int(ECS.EXTREMEMODE.value, 0))
         self.setGlobalTurbo()
 
     def setGlobalAuto(self):
@@ -414,12 +402,10 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
     def cpuauto(self):
         self.ECHandler.ec_write(int(ECS.CPU_FAN_MODE_CONTROL.value, 0), int(ECS.CPU_AUTO_MODE.value, 0))
         self.cpuFanMode = PFS.Auto
-        self.ledset()
 
     def cpumax(self):
         self.ECHandler.ec_write(int(ECS.CPU_FAN_MODE_CONTROL.value, 0), int(ECS.CPU_TURBO_MODE.value, 0))
         self.cpuFanMode = PFS.Turbo
-        self.ledset()
 
     def cpusetmanual(self):
         self.ECHandler.ec_write(int(ECS.CPU_FAN_MODE_CONTROL.value, 0), int(ECS.CPU_MANUAL_MODE.value, 0))
@@ -463,16 +449,6 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
             self.ECHandler.ec_write(int(ECS.KB_30_SEC_AUTO.value, 0), int(ECS.KB_30_AUTO_OFF.value, 0))
         else:
             self.ECHandler.ec_write(int(ECS.KB_30_SEC_AUTO.value, 0), int(ECS.KB_30_AUTO_ON.value, 0))
-
-    # Toggle LCD Overdrive
-    def toggleLCDOverdrive(self, tog):
-        if tog:
-            self.displayOverdrive = self.ECHandler.ec_read(int(ECS.LCDOVERDRIVE.value, 0))
-            displayOverdriveMask = self.displayOverdrive + (1 << 3)
-            self.ECHandler.ec_write(int(ECS.LCDOVERDRIVE.value, 0), displayOverdriveMask)
-        else:
-            displayOverdriveMask = self.displayOverdrive - (1 << 3)
-            self.ECHandler.ec_write(int(ECS.LCDOVERDRIVE.value, 0), displayOverdriveMask)
     
     # USB charging whilst off
     def toggleUSBCharging(self, tog):
@@ -496,15 +472,6 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
             self.ECHandler.ec_write(int(ECS.BATTERYCHARGELIMIT.value, 0), int(ECS.BATTERYLIMITOFF.value, 0))
 
     ## ----------------------------------------------------
-    # Toggle the Turbo Led
-    def ledset(self):
-        turboLedEnabled = self.ECHandler.ec_read(int(ECS.TURBO_LED_CONTROL.value, 0)) == int(ECS.TURBO_LED_ON.value, 0)
-        if self.turboEnabled:
-            if not turboLedEnabled:
-                self.ECHandler.ec_write(int(ECS.TURBO_LED_CONTROL.value, 0), int(ECS.TURBO_LED_ON.value, 0))     
-        else:
-            if turboLedEnabled:
-                self.ECHandler.ec_write(int(ECS.TURBO_LED_CONTROL.value, 0), int(ECS.TURBO_LED_OFF.value, 0))         
 
     # Update the Battery status
     def setBatteryStatus(self):
@@ -526,28 +493,25 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
         elif self.batteryChargeLimit == int(ECS.BATTERYLIMITOFF.value, 0):
             self.batteryChargeLimitValue.setText("Off")
 
-    # Update the Predator state
-    def setPredatorMode(self):
-        # print("predatorModeValue: " + str(self.predatorMode))
-        if self.predatorMode == int(ECS.QUIETMODE.value, 0):
-            self.predatorModeValue.setText("Quiet\t")
+    # Update the Nitro state
+    def setNitroMode(self):
+        # print("nitroModeValue: " + str(self.nitroMode))
+        if self.nitroMode == int(ECS.QUIETMODE.value, 0):
+            self.nitroModeValue.setText("Quiet\t")
             self.quietModeCB.setChecked(True)
-        elif self.predatorMode == int(ECS.DEFAULTMODE.value, 0):
-            self.predatorModeValue.setText("Default\t")
+        elif self.nitroMode == int(ECS.DEFAULTMODE.value, 0):
+            self.nitroModeValue.setText("Default\t")
             self.defaultModeCB.setChecked(True)
-        elif self.predatorMode == int(ECS.EXTREMEMODE.value, 0):
-            self.predatorModeValue.setText("Extreme\t")
+        elif self.nitroMode == int(ECS.EXTREMEMODE.value, 0):
+            self.nitroModeValue.setText("Extreme\t")
             self.extremeModeCB.setChecked(True)
-        elif self.predatorMode == int(ECS.TURBOMODE.value, 0):
-            self.predatorModeValue.setText("Turbo\t")
-            self.turboModeCB.setChecked(True)
         else:
-            print("Error read EC register for Predator Mode: " + str(self.predatorMode))
+            print("Error read EC register for Nitro Mode: " + str(self.nitroMode))
 
-        # self.predatorModeValue.adjustSize()
+        # self.nitroModeValue.adjustSize()
 
     # Update the UI state
-    def updatePredatorStatus(self):
+    def updateNitroStatus(self):
         checkVoltage(self)
         # print(self.voltage)
         minmaxVoltages = str("%1.2f" % self.minrecordedVoltage) + " / " + str("%1.2f" % self.maxrecordedVoltage)
@@ -576,7 +540,7 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
                 self.setDefaultMode()
            
         self.setBatteryStatus()
-        self.setPredatorMode()
+        self.setNitroMode()
 
         self.voltageChart.update_data(float("%1.2f" %  self.voltage))
         self.cpuChart.update_data(self.cpuTemp)
@@ -596,7 +560,7 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
 
         self.powerStatusValue.setText(str(self.powerPluggedIn))
 
-        # self.updateUI(Ui_PredatorSense, str(self.cpufanspeed), str(self.gpufanspeed),
+        # self.updateUI(Ui_NitroSense, str(self.cpufanspeed), str(self.gpufanspeed),
         #     str(self.cpuTemp), str(self.gpuTemp), str(self.sysTemp), str(self.powerPluggedIn), str(batteryStat))        
 
     ## ----------------------------------------------------
@@ -611,7 +575,7 @@ class MainWindow(QtWidgets.QDialog, Ui_PredatorSense):
 
 app = QtWidgets.QApplication(sys.argv)
 application = MainWindow()
-app.setApplicationName("Linux PredatorSense")
+app.setApplicationName("Linux NitroSense")
 application.setFixedSize(application.WIDTH, application.HEIGHT) # Makes the window not resizeable
 application.setWindowIcon(QtGui.QIcon('app_icon.ico'))
 ## Set global window opacity
