@@ -14,6 +14,9 @@
 
 
 ## Usage:
+If installed just open it up from the applications menu!
+If cloned proceed to the command line instructions.
+
 ### COMMAND LINE  
  - ```sudo``` is required in order to access the Super I/O EC registers and apply undervolt offsets.
   - From the command line run the main script as root:
