@@ -9,7 +9,7 @@
 * Using this application with other laptops may potentially damage them. Proceed at your discretion.
 
 ## Install:
-- Get the latest (release)[https://github.com/Packss/Linux-NitroSense/releases]
+- Get the latest [release](https://github.com/Packss/Linux-NitroSense/releases)
 - Run ```sudo ./install.sh``` from inside the folder
 
 
