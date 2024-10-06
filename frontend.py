@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-import os
-import sys
-
 # Form implementation generated from reading ui file 'dialog.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.7
@@ -11,7 +7,6 @@ import sys
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtChart import QChart, QLineSeries, QAreaSeries, QChartView
-from PyQt5.QtGui import QPen
 from PyQt5.QtCore import Qt
 
 stylesheet = '''
@@ -48,6 +43,7 @@ QGroupBox::title {
 }
 '''
 
+
 class CustomChart:
     def __init__(
         self,
@@ -62,7 +58,8 @@ class CustomChart:
         axis_y_range=(0.7, 1.6),
         **chart_kwargs,
     ):
-        print(title, objectName, sample_count, area_series_color, line_series_color, axis_x_label, axis_y_label, axis_x_range, axis_y_range)
+        print(title, objectName, sample_count, area_series_color,
+              line_series_color, axis_x_label, axis_y_label, axis_x_range, axis_y_range)
         self.samples = [0.0] * sample_count
         self.sample_count = sample_count
         self.axis_y_range = axis_y_range
@@ -91,7 +88,7 @@ class CustomChart:
         self.chart.setTitle(title)
         self.chart.setTitleFont(QtGui.QFont("Arial", 8))
 
-        ## Set series pen and brush colors
+        # Set series pen and brush colors
         # pen = QPen(Qt.white)
         # pen.setWidth(2)
         # self.areaSeries.setPen(pen)
@@ -106,8 +103,8 @@ class CustomChart:
         # pen = self.lineSeriesShadow.pen()
         # pen.setBrush(QtGui.QColor(line_series_color))
         # # pen.setStyle(Qt.PenStyle.DotLine)
-        # self.lineSeriesShadow.setPen(pen)       
-        # self.lineSeriesShadow.setPointLabelsFont(QtGui.QFont("Arial", 6)) 
+        # self.lineSeriesShadow.setPen(pen)
+        # self.lineSeriesShadow.setPointLabelsFont(QtGui.QFont("Arial", 6))
 
         # Set axis labels and ranges
         axis_x = self.chart.axes(QtCore.Qt.Horizontal)[0]
@@ -121,21 +118,21 @@ class CustomChart:
         axis_y.setTitleText(axis_y_label)
         axis_y.setRange(*axis_y_range)
         axis_y.setLabelsFont(QtGui.QFont("Arial", 6))
-        axis_y.setTickCount(4) # Set how many tick lines you want to see
+        axis_y.setTickCount(4)  # Set how many tick lines you want to see
 
         # Apply additional chart customizations
         for key, value in chart_kwargs.items():
             setattr(self.chart, key, value)
-        
+
         self.chartView.setObjectName(objectName)
         self.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
 
         self.lineSeriesShadow.setPointLabelsVisible(True)
         self.lineSeriesShadow.setPointLabelsClipping(False)
-        self.lineSeriesShadow.setPointLabelsFormat("@yPoint")       
+        self.lineSeriesShadow.setPointLabelsFormat("@yPoint")
         # self.lineSeriesShadow.setPointLabelsFormat("%.2f" % 9)
         # self.lineSeriesShadow.setLabelPosition(QPointF(10, 10))
-        # self.lineSeriesShadow.setLabelOverlap(False)        
+        # self.lineSeriesShadow.setLabelOverlap(False)
 
     def update_data(self, sample):
         if len(self.samples) >= self.sample_count-1:
@@ -149,10 +146,10 @@ class CustomChart:
             self.upperSeries.append(i, value)
             self.lowerSeries.append(i, 0)
 
-        ## HACK - to prevent chart redraw from clipping labels.
-        #         Add 1 additional sample point to the end of the list whos y axis value 
-        #         is greater than the max chart range. This enables the repaint to not 
-        #         clip series labels whos y value > y max. The 1.2 part will help prevent labels 
+        # HACK - to prevent chart redraw from clipping labels.
+        #         Add 1 additional sample point to the end of the list whos y axis value
+        #         is greater than the max chart range. This enables the repaint to not
+        #         clip series labels whos y value > y max. The 1.2 part will help prevent labels
         #         being cut off when graphs reach the max y range.
         self.upperSeries.append(i+1, self.axis_y_range[1]*1.2)
         self.lowerSeries.append(i+1, 0)
@@ -161,7 +158,7 @@ class CustomChart:
         # self.lineSeries.append(QPointF(0, sample))
         # self.lineSeries.append(QPointF(self.sample_count - 1, sample))
         self.lineSeries.append(0, sample)
-        self.lineSeries.append(self.sample_count - 1, sample)       
+        self.lineSeries.append(self.sample_count - 1, sample)
 
         self.lineSeriesShadow.clear()
         self.lineSeriesShadow.append(20, sample)
@@ -174,13 +171,13 @@ class Ui_NitroSense(object):
 
     def setupUI(self, NitroSense):
 
-        ## Create window
+        # Create window
         NitroSense.setObjectName("NitroSense")
         NitroSense.setWindowTitle("Nitro Sense™")
         NitroSense.setWindowModality(QtCore.Qt.NonModal)
         # NitroSense.resize(self.WIDTH, self.HEIGHT)
-        
-        ##-------Fan Control Tab--------##
+
+        ## -------Fan Control Tab--------##
 
         # QtGui.QFontDatabase.addApplicationFont("fonts/Squares Regular.otf")
         font = QtGui.QFont()
@@ -194,7 +191,8 @@ class Ui_NitroSense(object):
         # boldfont.setPointSize(12)
 
         self.fan_control_tab = QtWidgets.QTabWidget(NitroSense)
-        self.fan_control_tab.setGeometry(QtCore.QRect(0, 0, self.WIDTH, self.HEIGHT))
+        self.fan_control_tab.setGeometry(
+            QtCore.QRect(0, 0, self.WIDTH, self.HEIGHT))
         # sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         # sizePolicy.setHorizontalStretch(0)
         # sizePolicy.setVerticalStretch(0)
@@ -211,17 +209,17 @@ class Ui_NitroSense(object):
         self.monitoring_tab = QtWidgets.QWidget(NitroSense)
         # self.monitoring_tab.setGeometry(QtCore.QRect(0, 0, self.WIDTH, 650))
         self.monitoring_tab.setObjectName("monitoring_tab")
-        
+
         # Tab name
         self.fan_control_tab.addTab(self.tab, "Home")
         self.fan_control_tab.addTab(self.monitoring_tab, "Monitoring")
         # self.fan_control_tab.setCurrentIndex(1)
-        # self.fan_control_tab.setTabText(self.fan_control_tab.indexOf(self.tab), "NitroSense")        
+        # self.fan_control_tab.setTabText(self.fan_control_tab.indexOf(self.tab), "NitroSense")
 
         self.tab.setStyleSheet(stylesheet)
         self.monitoring_tab.setStyleSheet(stylesheet)
 
-        ##------------ Label-------------##
+        ## ------------ Label-------------##
 
         # #PREDATORTITLE
         # self.nitroTitle = QtWidgets.QLabel(self.tab)
@@ -230,14 +228,14 @@ class Ui_NitroSense(object):
         # self.nitroTitle.move(150, 5)
         # self.nitroTitle.setFont(QtGui.QFont("TT Squares", 18, QtGui.QFont.Bold))
 
-        ##------------Status-------------##
+        ## ------------Status-------------##
 
         self.status_box = QtWidgets.QGroupBox(self.tab)
         self.status_box.setGeometry(QtCore.QRect(20, 40, 340, 100))
         self.status_box.setFont(boldfont)
         self.status_box.setObjectName("status_box")
-        
-        #POWERSTATUS
+
+        # POWERSTATUS
         self.powerStatusLabel = QtWidgets.QLabel(self.status_box)
         self.powerStatusLabel.setObjectName("powerStatusLabel")
         self.powerStatusLabel.setText("Power Status  :")
@@ -246,14 +244,14 @@ class Ui_NitroSense(object):
         self.powerStatusValue.setObjectName("powerStatusValue")
         self.powerStatusValue.move(125, 15)
 
-        #BATTERYSTATUS
+        # BATTERYSTATUS
         self.batteryStatusLabel = QtWidgets.QLabel(self.status_box)
         self.batteryStatusLabel.setObjectName("batteryStatusLabel")
         self.batteryStatusLabel.setText("Battery Status:")
         self.batteryStatusLabel.move(10, 35)
         self.batteryStatusValue = QtWidgets.QLabel(self.status_box)
         self.batteryStatusValue.setObjectName("batteryStatusValue")
-        self.batteryStatusValue.move(125, 35)        
+        self.batteryStatusValue.move(125, 35)
 
         # BATTERYCHARGELIMIT
         self.batteryChargeLimitLabel = QtWidgets.QLabel(self.status_box)
@@ -278,13 +276,13 @@ class Ui_NitroSense(object):
         self.batteryStatusLabel.setFont(boldfont)
         self.batteryChargeLimitLabel.setFont(boldfont)
         self.nitroModeLabel.setFont(boldfont)
-        
+
         self.powerStatusValue.setFont(font)
         self.batteryStatusValue.setFont(font)
         self.batteryChargeLimitValue.setFont(font)
         self.nitroModeValue.setFont(font)
 
-        ##---------Nitro Mode---------##
+        ## ---------Nitro Mode---------##
 
         self.predMode = QtWidgets.QGroupBox(self.tab)
         self.predMode.setGeometry(QtCore.QRect(370, 40, 90, 100))
@@ -306,7 +304,7 @@ class Ui_NitroSense(object):
         self.extremeModeCB.setObjectName("extremeModeCB")
         self.extremeModeCB.move(10, 55)
 
-        ##-------------Misc--------------##
+        ## -------------Misc--------------##
 
         self.KB_box = QtWidgets.QGroupBox(self.tab)
         self.KB_box.setGeometry(QtCore.QRect(320, 145, 140, 80))
@@ -321,7 +319,7 @@ class Ui_NitroSense(object):
         # self.trackpadCB = QtWidgets.QCheckBox(self.KB_box)
         # self.trackpadCB.setFont(font)
         # self.trackpadCB.setObjectName("trackpadCB")
-        # self.trackpadCB.move(10, 60)        
+        # self.trackpadCB.move(10, 60)
 
         self.usbChargingCB = QtWidgets.QCheckBox(self.KB_box)
         self.usbChargingCB.setFont(font)
@@ -331,9 +329,9 @@ class Ui_NitroSense(object):
         self.chargeLimit = QtWidgets.QCheckBox(self.KB_box)
         self.chargeLimit.setFont(font)
         self.chargeLimit.setObjectName("ChargeLimit")
-        self.chargeLimit.move(10, 55)                      
+        self.chargeLimit.move(10, 55)
 
-        ##------------------------------##
+        ## ------------------------------##
 
         # self.coolboost_checkbox = QtWidgets.QCheckBox(self.tab)
         # self.coolboost_checkbox.setGeometry(QtCore.QRect(30, 20, 381, 61))
@@ -344,7 +342,7 @@ class Ui_NitroSense(object):
         # self.coolboost_checkbox.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         # self.coolboost_checkbox.setObjectName("checkBox")
 
-        ##--------Temperatures----------##
+        ## --------Temperatures----------##
 
         self.temp_box = QtWidgets.QGroupBox(self.tab)
         self.temp_box.setGeometry(QtCore.QRect(20, 145, 140, 80))
@@ -384,7 +382,7 @@ class Ui_NitroSense(object):
         self.gpuTempValue.setFont(font)
         self.sysTempValue.setFont(font)
 
-        ##-----------Fan RPM------------##
+        ## -----------Fan RPM------------##
 
         self.fan_box = QtWidgets.QGroupBox(self.tab)
         self.fan_box.setGeometry(QtCore.QRect(170, 145, 140, 80))
@@ -409,11 +407,11 @@ class Ui_NitroSense(object):
 
         self.cpuFanSpeedLabel.setFont(boldfont)
         self.gpuFanSpeedLabel.setFont(boldfont)
-        
+
         self.cpuFanSpeedValue.setFont(font)
         self.gpuFanSpeedValue.setFont(font)
 
-        ##----------Undervolt-----------##
+        ## ----------Undervolt-----------##
 
         self.undervolt_box = QtWidgets.QGroupBox(self.tab)
         self.undervolt_box.setGeometry(QtCore.QRect(20, 230, 440, 200))
@@ -424,10 +422,10 @@ class Ui_NitroSense(object):
         self.undervoltLayout.setContentsMargins(10, 30, 10, 10)
         self.undervoltLayout.setObjectName("undervoltLayout")
 
-        ## Current voltage
+        # Current voltage
         self.voltageLabel = QtWidgets.QLabel(self.undervolt_box)
         self.voltageLabel.setText("Voltage:")
-        self.voltageLabel.setObjectName("voltageLabel") 
+        self.voltageLabel.setObjectName("voltageLabel")
         self.voltageLabel.move(10, 10)
         # self.voltageLabel.setGeometry(368, 0, 5, 5)
 
@@ -441,7 +439,7 @@ class Ui_NitroSense(object):
         # self.voltageValue.setScaledContents(True)
         # self.voltageValue.adjustSize()
 
-        ## Max / Min
+        # Max / Min
         self.voltageMinMaxLabel = QtWidgets.QLabel(self.undervolt_box)
         self.voltageMinMaxLabel.setText("Min / Max:")
         self.voltageMinMaxLabel.setObjectName("voltageMinMaxLabel")
@@ -451,7 +449,7 @@ class Ui_NitroSense(object):
         self.voltageMinMaxValue.setObjectName("voltageMinMaxValue")
         self.voltageMinMaxValue.move(230, 10)
 
-        ## Undervolt readings
+        # Undervolt readings
         # self.undervoltStatus = QtWidgets.QLabel(self.undervolt_box)
         self.undervoltStatus = QtWidgets.QTextBrowser(self.undervolt_box)
         self.undervoltStatus.setObjectName("undervoltStatus")
@@ -478,7 +476,7 @@ class Ui_NitroSense(object):
         self.voltageValue.setFont(font)
         self.voltageMinMaxValue.setFont(font)
 
-        ##------------Global------------##
+        ## ------------Global------------##
 
         self.global_box = QtWidgets.QGroupBox(self.tab)
         self.global_box.setGeometry(QtCore.QRect(200, 505, 80, 80))
@@ -492,7 +490,7 @@ class Ui_NitroSense(object):
         self.horizontalLayout.setObjectName("horizontalLayout")
 
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-        
+
         self.global_auto = QtWidgets.QRadioButton(self.globallayoutWidget)
         self.global_auto.setFont(font)
         self.global_auto.setChecked(True)
@@ -504,7 +502,7 @@ class Ui_NitroSense(object):
         self.global_turbo.setObjectName("global_turbo")
         self.horizontalLayout.addWidget(self.global_turbo)
 
-        ##----------CPU Box-------------##
+        ## ----------CPU Box-------------##
 
         self.cpu_box = QtWidgets.QGroupBox(self.tab)
         self.cpu_box.setGeometry(QtCore.QRect(20, 440, 150, 190))
@@ -544,7 +542,7 @@ class Ui_NitroSense(object):
         self.cpu_manual.setFont(font)
         self.cpu_turbo.setFont(font)
 
-        ##----------GPU Box-------------##
+        ## ----------GPU Box-------------##
 
         self.gpu_box = QtWidgets.QGroupBox(self.tab)
         self.gpu_box.setGeometry(QtCore.QRect(310, 440, 150, 190))
@@ -583,12 +581,13 @@ class Ui_NitroSense(object):
 
         self.gpu_auto.setFont(font)
         self.gpu_manual.setFont(font)
-        self.gpu_turbo.setFont(font)        
+        self.gpu_turbo.setFont(font)
 
-        ##------------------------------##
+        ## ------------------------------##
 
         self.exit_button = QtWidgets.QPushButton(self.tab)
-        self.exit_button.setGeometry(QtCore.QRect(int(self.WIDTH/2-25), 600, 50, 25))
+        self.exit_button.setGeometry(
+            QtCore.QRect(int(self.WIDTH/2-25), 600, 50, 25))
         self.exit_button.setFont(boldfont)
         self.exit_button.setObjectName("pushButton")
         self.exit_button.setText("Exit")
@@ -597,35 +596,45 @@ class Ui_NitroSense(object):
         # self.reset_button.setGeometry(QtCore.QRect(int(self.WIDTH/2-40), 440, 80, 25))
         # self.reset_button.setFont(font)
         # self.reset_button.setObjectName("restPushButton")
-        # self.reset_button.setText("Reset")  
+        # self.reset_button.setText("Reset")
 
         # Undervolt selection dropdown with 100mv steps from 0mv to 600mv
         self.undervolt_dropdown = QtWidgets.QComboBox(self.tab)
-        self.undervolt_dropdown.setGeometry(QtCore.QRect(int(self.WIDTH/2-40), 440, 80, 25))
+        self.undervolt_dropdown.setGeometry(
+            QtCore.QRect(int(self.WIDTH/2-40), 440, 80, 25))
         self.undervolt_dropdown.setFont(font)
         self.undervolt_dropdown.setObjectName("undervoltComboBox")
-        self.undervolt_dropdown.addItems(["0mV", "-100mV", "-200mV", "-300mV", "-400mV", "-500mV", "-600mV", "-700mV"])
+        self.undervolt_dropdown.addItems(
+            ["0mV", "-100mV", "-200mV", "-300mV", "-400mV", "-500mV", "-600mV", "-700mV"])
 
         self.undervolt_button = QtWidgets.QPushButton(self.tab)
-        self.undervolt_button.setGeometry(QtCore.QRect(int(self.WIDTH/2-40), 465, 80, 25))
+        self.undervolt_button.setGeometry(
+            QtCore.QRect(int(self.WIDTH/2-40), 465, 80, 25))
         self.undervolt_button.setFont(font)
         self.undervolt_button.setObjectName("undervoltPushButton")
         self.undervolt_button.setText("Undervolt")
 
-        ##--------MONITORING TAB--------##
+        ## --------MONITORING TAB--------##
 
-        self.voltageChart = CustomChart("Voltage", "voltage_box", 64, "#80ff0000", "#E74C3C", "", "", (0, 63), (0.7, 1.6))
-        self.cpuChart = CustomChart("CPU Temp", "cpuchart_box", 64, "#800000ff", "#0E86D4", "", "", (0, 63), (0, 110))
-        self.gpuChart = CustomChart("GPU Temp", "gpuchart_box", 64, "#8000ff00", "#0E8600", "", "", (0, 63), (0, 110))
-        self.sysChart = CustomChart("SYS Temp", "syschart_box", 64, "#8000ffff", "#0Effff", "", "", (0, 63), (0, 110))
+        self.voltageChart = CustomChart(
+            "Voltage", "voltage_box", 64, "#80ff0000", "#E74C3C", "", "", (0, 63), (0.7, 1.6))
+        self.cpuChart = CustomChart(
+            "CPU Temp", "cpuchart_box", 64, "#800000ff", "#0E86D4", "", "", (0, 63), (0, 110))
+        self.gpuChart = CustomChart(
+            "GPU Temp", "gpuchart_box", 64, "#8000ff00", "#0E8600", "", "", (0, 63), (0, 110))
+        self.sysChart = CustomChart(
+            "SYS Temp", "syschart_box", 64, "#8000ffff", "#0Effff", "", "", (0, 63), (0, 110))
 
-        self.cpuFanChart = CustomChart("CPU Fan", "cpufanchart_box", 64, "#800080ff", "#0E80ff", "", "", (0, 63), (0, 7700))
-        self.gpuFanChart = CustomChart("GPU Fan", "gpufanchart_box", 64, "#8000ff80", "#0Eff80", "", "", (0, 63), (0, 7700))
+        self.cpuFanChart = CustomChart(
+            "CPU Fan", "cpufanchart_box", 64, "#800080ff", "#0E80ff", "", "", (0, 63), (0, 7700))
+        self.gpuFanChart = CustomChart(
+            "GPU Fan", "gpufanchart_box", 64, "#8000ff80", "#0Eff80", "", "", (0, 63), (0, 7700))
 
         # Set up chart layout
         # self.chart_box = QtWidgets.QGroupBox(self.tab)
         self.chart_box = QtWidgets.QGroupBox(self.monitoring_tab)
-        self.chart_box.setGeometry(QtCore.QRect(0, 0, self.WIDTH, self.HEIGHT-30))
+        self.chart_box.setGeometry(QtCore.QRect(
+            0, 0, self.WIDTH, self.HEIGHT-30))
         self.chart_box.setObjectName("monitoring_box")
 
         self.vchart = QtWidgets.QVBoxLayout(self.chart_box)
@@ -648,7 +657,7 @@ class Ui_NitroSense(object):
         # scrollAreaContentLayout = QtWidgets.QVBoxLayout(scrollAreaContent)
         # scrollArea.setGeometry(0, 0, self.WIDTH, self.HEIGHT)  # Adjusted height for better fit
         # scrollArea.setGeometry(QtCore.QRect(20, 50, 440, 655))
-        # scrollArea.setWidget(self.chart_box)        
+        # scrollArea.setWidget(self.chart_box)
 
         # self.voltageChart.chartView.setObjectName("chartView")
         self.chart_box.setLayout(self.vchart)
@@ -660,8 +669,10 @@ class Ui_NitroSense(object):
         self.global_auto.clicked['bool'].connect(self.cpu_auto.setChecked)
         self.global_auto.clicked['bool'].connect(self.gpu_auto.setChecked)
 
-        self.cpu_manual.toggled['bool'].connect(self.cpuManualSlider.setEnabled)
-        self.gpu_manual.toggled['bool'].connect(self.gpuManualSlider.setEnabled)
+        self.cpu_manual.toggled['bool'].connect(
+            self.cpuManualSlider.setEnabled)
+        self.gpu_manual.toggled['bool'].connect(
+            self.gpuManualSlider.setEnabled)
 
         # Prevents the user from disabling max cpu or gpu fan mode individually when global turbo mode is enabled
         self.global_turbo.toggled['bool'].connect(self.cpu_auto.setDisabled)
@@ -675,13 +686,13 @@ class Ui_NitroSense(object):
 
         # QtCore.QMetaObject.connectSlotsByName(NitroSense)
 
-        ## ----------------------------------------------------
-        # Set button text and window titles 
+        # ----------------------------------------------------
+        # Set button text and window titles
 
         # Window title
         NitroSense.setWindowTitle("Linux NitroSense")
 
-        ## CoolBoost checkbox
+        # CoolBoost checkbox
         # self.coolboost_checkbox.setToolTip(_translate("NitroSense", "Only Works When In Auto Mode"))
         # self.coolboost_checkbox.setText(_translate("NitroSense", "CoolBoost™"))
 
@@ -706,7 +717,7 @@ class Ui_NitroSense(object):
         self.gpuFanSpeedValue.setText("5660" + " RPM")
         self.cpuTempValue.setText("100" + "°")
         self.gpuTempValue.setText("100" + "°")
-        self.sysTempValue.setText("100" + "°")        
+        self.sysTempValue.setText("100" + "°")
 
         # Misc box
         self.KB_box.setTitle("Misc")
@@ -719,7 +730,7 @@ class Ui_NitroSense(object):
         self.status_box.setTitle("Status")
 
         # Undervolt box
-        self.undervolt_box.setTitle("Undervolt") 
+        self.undervolt_box.setTitle("Undervolt")
 
         self.voltageValue.setText("0.00")
         self.voltageMinMaxValue.setText("0.00")
