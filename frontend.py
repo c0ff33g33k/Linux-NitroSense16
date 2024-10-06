@@ -619,8 +619,8 @@ class Ui_NitroSense(object):
         self.gpuChart = CustomChart("GPU Temp", "gpuchart_box", 64, "#8000ff00", "#0E8600", "", "", (0, 63), (0, 110))
         self.sysChart = CustomChart("SYS Temp", "syschart_box", 64, "#8000ffff", "#0Effff", "", "", (0, 63), (0, 110))
 
-        self.cpuFanChart = CustomChart("CPU Fan", "cpufanchart_box", 64, "#800080ff", "#0E80ff", "", "", (0, 63), (0, 5660))
-        self.gpuFanChart = CustomChart("GPU Fan", "gpufanchart_box", 64, "#8000ff80", "#0Eff80", "", "", (0, 63), (0, 5660))
+        self.cpuFanChart = CustomChart("CPU Fan", "cpufanchart_box", 64, "#800080ff", "#0E80ff", "", "", (0, 63), (0, 7700))
+        self.gpuFanChart = CustomChart("GPU Fan", "gpufanchart_box", 64, "#8000ff80", "#0Eff80", "", "", (0, 63), (0, 7700))
 
         # Set up chart layout
         # self.chart_box = QtWidgets.QGroupBox(self.tab)

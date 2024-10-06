@@ -63,7 +63,7 @@ class ECS(enum.Enum):
     EXTREMEMODE = '0x04'
 
     TRACKPADSTATUS = '0xA1'
-    TRACKPADENABLED = '0x00'
+    TRACKPADENABLED = '0x00'    
     TRACKPADDISABLED = '0x04'
 
 ##------------------------------##
@@ -76,15 +76,13 @@ class PFS(enum.Enum):
 
 ##------------------------------##
 ##---------Undervolting---------##
-UNDERVOLT_PATH = "/usr/bin/undervolt"
-
 COREOFFSET = 100 # mV
 UPDATE_INTERVAL = 1000 #1 sec interval
 
 ## Read the current undervoltage offsets
 def checkUndervoltStatus(self):
     process = QProcess()
-    process.start('sudo amdctl -g -c0')
+    process.start('sudo amdctl -m -g -c0')
     #process.waitForStarted()
     process.waitForFinished()
     #process.waitForReadyRead()
@@ -103,7 +101,7 @@ def applyUndervolt(self):
     core = self.undervolt_dropdown.currentIndex()
     vid = core * 16
     if (vid == 0): vid = 1
-    process.start(f"sudo amdctl -v{vid}")
+    process.start(f"sudo amdctl -m -v{vid}")
     #process.waitForStarted()
     process.waitForFinished()
     #process.waitForReadyRead()
