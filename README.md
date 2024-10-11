@@ -1,17 +1,49 @@
-## NitroSense™ clone for ```AN515-46-R5WF```
+## NitroSense™ clone for ```AN515-46```
 ### Controls fan speed, gaming modes and undervolting on Linux. This application is intended for Acer Nitro 5 AN515-46 model.
-
-![Predator Sense](LinuxPredatorSense.png)
 
 ## Disclaimer:
 * Secure Boot **IS** \* supported if you only use the ```acpi_ec``` package.
 * Secure Boot is **NOT** \* supported if you want to control CPU voltage offsets using the ```msr-tools``` and ```amdctl``` packages.
 * Using this application with other laptops may potentially damage them. Proceed at your discretion.
 
+
+## Dependencies [Development]:
+* Ubuntu / Linux Mint:
+  ```
+  sudo apt-get install python3-pyqt5, python3-pyqt5.qtchart
+  ```
+
+  ```
+  git clone https://github.com/musikid/acpi_ec/
+  cd acpi_ec
+  sudo ./install.sh
+  modprobe acpi_ec
+  sudo cat /dev/ec #confirm access to EC
+  ```
+ 
+* Fedora:
+  ```
+  sudo dnf install python3-qt5
+  sudo dnf install python3-pyqtchart
+  ```
+  Make sure SecureBoot is off.
+
+  ```
+  sudo dnf install dkms
+  
+  git clone https://github.com/musikid/acpi_ec/
+  cd acpi_ec
+  sudo ./install.sh
+  modprobe acpi_ec
+  sudo cat /dev/ec #confirm access to EC
+  ```
+_[OPTIONAL]_
+- Install ```amdctl``` for undervolt and voltage readings
+- Install [acer-predator-module](https://github.com/JafarAkhondali/acer-predator-turbo-and-rgb-keyboard-linux-module) for keyboard rgb control
+
 ## Install:
 - Get the latest [release](https://github.com/Packss/Linux-NitroSense/releases)
 - Run ```sudo ./install.sh``` from inside the folder
-
 
 ## Usage:
 If installed just open it up from the applications menu!
@@ -24,8 +56,6 @@ If cloned proceed to the command line instructions.
   sudo python3 main.py
   ```
 
-_[OPTIONAL]_
-- Install ```amdctl``` for undervolt and voltage readings
 
 
 ### NVIDIA-POWERD
