@@ -10,9 +10,7 @@ from PyQt5.QtChart import QChart, QLineSeries, QAreaSeries, QChartView
 from PyQt5.QtCore import Qt
 
 stylesheet = '''
-QWidget #tab, #monitoring_tab {
-    /* border-image: url(NitroLogo.png) 0 0 0 0 stretch stretch */
-    background-image: url(NitroLogo.png);
+QWidget #tab, #monitoring_tab, #keyboard_tab {;
     background-repeat: no-repeat;
     background-position: top center;
     background-color: #252525;
@@ -25,15 +23,13 @@ QGroupBox {
     margin-top: 6px;
 }
 
-QGroupBox#monitoring_box {
+QGroupBox #monitoring_box {
     border: 0px dotted gray;
     margin: 0 0 0 0;
     /* background-color: yellow; */
 }
 
-QGroupBox #powerStatusLabel, #batteryStatusLabel, #batteryChargeLimitLabel, 
-#nitroModeLabel, #cpuTempLabel, #gpuTempLabel, #sysTempLabel, #cpuFanSpeedLabel, 
-#gpuFanSpeedLabel, #voltageLabel, #voltageMinMaxLabel, #voltageAverageLabel {
+QGroupBox #powerStatusLabel, #batteryStatusLabel, #batteryChargeLimitLabel, #nitroModeLabel, #cpuTempLabel, #gpuTempLabel, #sysTempLabel, #cpuFanSpeedLabel, #gpuFanSpeedLabel, #voltageLabel, #voltageMinMaxLabel, #voltageAverageLabel, #mode_label, #zone_label, #speed_label, #brightness_label, #direction_label {
     color: gray;
 }
 QGroupBox::title {
@@ -206,27 +202,21 @@ class Ui_NitroSense(object):
         self.tab.setGeometry(QtCore.QRect(0, 0, self.WIDTH, self.HEIGHT))
         self.tab.setObjectName("tab")
 
+        self.keyboard_tab = QtWidgets.QWidget(NitroSense)
+        self.keyboard_tab.setObjectName("keyboard_tab")
+
         self.monitoring_tab = QtWidgets.QWidget(NitroSense)
-        # self.monitoring_tab.setGeometry(QtCore.QRect(0, 0, self.WIDTH, 650))
+        self.monitoring_tab.setGeometry(QtCore.QRect(0, 0, self.WIDTH, self.HEIGHT))
         self.monitoring_tab.setObjectName("monitoring_tab")
 
         # Tab name
         self.fan_control_tab.addTab(self.tab, "Home")
+        self.fan_control_tab.addTab(self.keyboard_tab, "Keyboard")
         self.fan_control_tab.addTab(self.monitoring_tab, "Monitoring")
-        # self.fan_control_tab.setCurrentIndex(1)
-        # self.fan_control_tab.setTabText(self.fan_control_tab.indexOf(self.tab), "NitroSense")
 
         self.tab.setStyleSheet(stylesheet)
+        self.keyboard_tab.setStyleSheet(stylesheet)
         self.monitoring_tab.setStyleSheet(stylesheet)
-
-        ## ------------ Label-------------##
-
-        # #PREDATORTITLE
-        # self.nitroTitle = QtWidgets.QLabel(self.tab)
-        # self.nitroTitle.setObjectName("nitroTitle")
-        # self.nitroTitle.setText("NitroSense")
-        # self.nitroTitle.move(150, 5)
-        # self.nitroTitle.setFont(QtGui.QFont("TT Squares", 18, QtGui.QFont.Bold))
 
         ## ------------Status-------------##
 
@@ -316,11 +306,6 @@ class Ui_NitroSense(object):
         self.KBTimerCB.setObjectName("global_KBTimer")
         self.KBTimerCB.move(10, 10)
 
-        # self.trackpadCB = QtWidgets.QCheckBox(self.KB_box)
-        # self.trackpadCB.setFont(font)
-        # self.trackpadCB.setObjectName("trackpadCB")
-        # self.trackpadCB.move(10, 60)
-
         self.usbChargingCB = QtWidgets.QCheckBox(self.KB_box)
         self.usbChargingCB.setFont(font)
         self.usbChargingCB.setObjectName("usbCharging")
@@ -330,17 +315,6 @@ class Ui_NitroSense(object):
         self.chargeLimit.setFont(font)
         self.chargeLimit.setObjectName("ChargeLimit")
         self.chargeLimit.move(10, 55)
-
-        ## ------------------------------##
-
-        # self.coolboost_checkbox = QtWidgets.QCheckBox(self.tab)
-        # self.coolboost_checkbox.setGeometry(QtCore.QRect(30, 20, 381, 61))
-        # font.setPointSize(30)
-        # font.setBold(True)
-        # font.setWeight(75)
-        # self.coolboost_checkbox.setFont(font)
-        # self.coolboost_checkbox.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        # self.coolboost_checkbox.setObjectName("checkBox")
 
         ## --------Temperatures----------##
 
@@ -427,17 +401,10 @@ class Ui_NitroSense(object):
         self.voltageLabel.setText("Voltage:")
         self.voltageLabel.setObjectName("voltageLabel")
         self.voltageLabel.move(10, 10)
-        # self.voltageLabel.setGeometry(368, 0, 5, 5)
 
         self.voltageValue = QtWidgets.QLabel(self.undervolt_box)
         self.voltageValue.setObjectName("voltageValue")
         self.voltageValue.move(75, 10)
-
-        # self.voltageValue.setFixedWidth(30)
-        # self.voltageValue.setAlignment(QtCore.Qt.AlignLeft)
-        # self.voltageValue.setMargin(10)
-        # self.voltageValue.setScaledContents(True)
-        # self.voltageValue.adjustSize()
 
         # Max / Min
         self.voltageMinMaxLabel = QtWidgets.QLabel(self.undervolt_box)
@@ -450,23 +417,8 @@ class Ui_NitroSense(object):
         self.voltageMinMaxValue.move(230, 10)
 
         # Undervolt readings
-        # self.undervoltStatus = QtWidgets.QLabel(self.undervolt_box)
         self.undervoltStatus = QtWidgets.QTextBrowser(self.undervolt_box)
         self.undervoltStatus.setObjectName("undervoltStatus")
-        # self.undervoltStatus.setFixedWidth(400)
-        # self.undervoltStatus.move(10, 35)
-
-        # scrollArea = QtWidgets.QScrollArea(self.undervolt_box)
-        # # scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        # scrollArea.setWidgetResizable(True)
-        # scrollArea.setFixedWidth(420)
-        # scrollArea.setFixedHeight(80)
-        # scrollArea.setWidget(self.undervoltStatus)
-        # scrollArea.move(10, 35)
-        # self.voltageMinMaxValue.adjustSize()
-
-        # self.undervoltHLayout.addStretch()
-        # self.undervoltLayout.addSpacing(5)
         self.undervoltLayout.addWidget(self.undervoltStatus)
 
         self.voltageLabel.setFont(boldfont)
@@ -586,8 +538,7 @@ class Ui_NitroSense(object):
         ## ------------------------------##
 
         self.exit_button = QtWidgets.QPushButton(self.tab)
-        self.exit_button.setGeometry(
-            QtCore.QRect(int(self.WIDTH/2-25), 600, 50, 25))
+        self.exit_button.setGeometry(QtCore.QRect(int(self.WIDTH/2-25), 600, 50, 25))
         self.exit_button.setFont(boldfont)
         self.exit_button.setObjectName("pushButton")
         self.exit_button.setText("Exit")
@@ -614,6 +565,9 @@ class Ui_NitroSense(object):
         self.undervolt_button.setObjectName("undervoltPushButton")
         self.undervolt_button.setText("Undervolt")
 
+        ## --------KEYBOARD TAB--------##
+        
+
         ## --------MONITORING TAB--------##
 
         self.voltageChart = CustomChart(
@@ -633,8 +587,7 @@ class Ui_NitroSense(object):
         # Set up chart layout
         # self.chart_box = QtWidgets.QGroupBox(self.tab)
         self.chart_box = QtWidgets.QGroupBox(self.monitoring_tab)
-        self.chart_box.setGeometry(QtCore.QRect(
-            0, 0, self.WIDTH, self.HEIGHT-30))
+        self.chart_box.setGeometry(QtCore.QRect(0, 0, self.WIDTH, self.HEIGHT-30))
         self.chart_box.setObjectName("monitoring_box")
 
         self.vchart = QtWidgets.QVBoxLayout(self.chart_box)
@@ -647,22 +600,8 @@ class Ui_NitroSense(object):
         self.vchart.addWidget(self.sysChart.chartView)
         self.vchart.addWidget(self.cpuFanChart.chartView)
         self.vchart.addWidget(self.gpuFanChart.chartView)
-
-        # scrollArea = QtWidgets.QScrollArea(self.monitoring_tab)
-        # scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        # scrollArea.setWidgetResizable(True)
-        # scrollArea.setFixedHeight(600)
-        # scrollArea.setFixedWidth(400)
-        # scrollAreaContent = QtWidgets.QWidget()
-        # scrollAreaContentLayout = QtWidgets.QVBoxLayout(scrollAreaContent)
-        # scrollArea.setGeometry(0, 0, self.WIDTH, self.HEIGHT)  # Adjusted height for better fit
-        # scrollArea.setGeometry(QtCore.QRect(20, 50, 440, 655))
-        # scrollArea.setWidget(self.chart_box)
-
-        # self.voltageChart.chartView.setObjectName("chartView")
         self.chart_box.setLayout(self.vchart)
 
-        ###
 
         self.global_turbo.clicked['bool'].connect(self.cpu_turbo.setChecked)
         self.global_turbo.clicked['bool'].connect(self.gpu_turbo.setChecked)
@@ -752,5 +691,80 @@ class Ui_NitroSense(object):
         self.gpu_manual.setText("Manual")
         self.gpu_turbo.setText("Max speed")
 
-    # def updateUI(self, NitroSense, cpufanspeed, gpufanspeed, cpuTemp, gpuTemp, sysTemp, power, battery, mode, modeCB):
-        # return
+        # Keyboard tab
+        self.centralwidget = QtWidgets.QWidget(self.keyboard_tab)
+        self.centralwidget.setObjectName("centralwidget")
+
+        self.mode_label = QtWidgets.QLabel(self.keyboard_tab)
+        self.mode_label.setGeometry(QtCore.QRect(20, 20, 100, 30))
+        self.mode_label.setObjectName("mode_label")
+        self.mode_label.setText("Mode:")
+
+        self.mode_combo = QtWidgets.QComboBox(self.keyboard_tab)
+        self.mode_combo.setGeometry(QtCore.QRect(130, 20, 150, 30))
+        self.mode_combo.setObjectName("mode_combo")
+        self.mode_combo.addItems(["Static", "Breath", "Neon", "Wave", "Shifting", "Zoom"])
+
+        self.zone_label = QtWidgets.QLabel(self.keyboard_tab)
+        self.zone_label.setGeometry(QtCore.QRect(20, 60, 100, 30))
+        self.zone_label.setObjectName("zone_label")
+        self.zone_label.setText("Zone:")
+
+        self.zone_combo = QtWidgets.QComboBox(self.keyboard_tab)
+        self.zone_combo.setGeometry(QtCore.QRect(130, 60, 150, 30))
+        self.zone_combo.setObjectName("zone_combo")
+        self.zone_combo.addItems(["1", "2", "3", "4", "all"])
+
+        self.speed_label = QtWidgets.QLabel(self.keyboard_tab)
+        self.speed_label.setGeometry(QtCore.QRect(20, 100, 100, 30))
+        self.speed_label.setObjectName("speed_label")
+        self.speed_label.setText("Speed:")
+
+        self.speed_spin = QtWidgets.QSlider(self.keyboard_tab)
+        self.speed_spin.setGeometry(QtCore.QRect(130, 100, 150, 30))
+        self.speed_spin.setObjectName("speed_spin")
+        self.speed_spin.setOrientation(QtCore.Qt.Horizontal)
+        self.speed_spin.setRange(0, 9)
+        self.speed_spin.setTickInterval(1)
+
+        self.brightness_label = QtWidgets.QLabel(self.keyboard_tab)
+        self.brightness_label.setGeometry(QtCore.QRect(20, 140, 100, 30))
+        self.brightness_label.setObjectName("brightness_label")
+        self.brightness_label.setText("Brightness:")
+
+        self.brightness_spin = QtWidgets.QSlider(self.keyboard_tab)
+        self.brightness_spin.setGeometry(QtCore.QRect(130, 140, 150, 30))
+        self.brightness_spin.setObjectName("brightness_spin")
+        self.brightness_spin.setOrientation(QtCore.Qt.Horizontal)
+        self.brightness_spin.setRange(0, 100)
+        self.brightness_spin.setTickInterval(1)
+
+        self.direction_label = QtWidgets.QLabel(self.keyboard_tab)
+        self.direction_label.setGeometry(QtCore.QRect(20, 180, 100, 30))
+        self.direction_label.setObjectName("direction_label")
+        self.direction_label.setText("Direction:")
+
+        self.direction_combo = QtWidgets.QComboBox(self.keyboard_tab)
+        self.direction_combo.setGeometry(QtCore.QRect(130, 180, 150, 30))
+        self.direction_combo.setObjectName("direction_combo")
+        self.direction_combo.addItems(["Left to right", "Right to left"])
+
+        self.color_button = QtWidgets.QPushButton(self.keyboard_tab)
+        self.color_button.setGeometry(QtCore.QRect(20, 220, 100, 30))
+        self.color_button.setObjectName("color_button")
+        self.color_button.setText("Select Color")
+
+        self.apply_button = QtWidgets.QPushButton(self.keyboard_tab)
+        self.apply_button.setGeometry(QtCore.QRect(130, 220, 100, 30))
+        self.apply_button.setObjectName("apply_button")
+        self.apply_button.setText("Apply")
+
+        self.save_button = QtWidgets.QPushButton(self.keyboard_tab)
+        self.save_button.setGeometry(QtCore.QRect(240, 220, 100, 30))
+        self.save_button.setObjectName("save_button")
+        self.save_button.setText("Save")
+
+        QtCore.QMetaObject.connectSlotsByName(self.keyboard_tab)
+
+        self.selected_color = (0, 0, 0)
+

@@ -1,6 +1,6 @@
-from PyQt5 import QtWidgets, QtGui
 import sys
 
+from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QTimer, QProcess
 from PyQt5.QtGui import QPalette, QColor
 
@@ -8,6 +8,9 @@ from PyQt5.QtGui import QPalette, QColor
 from frontend import Ui_NitroSense
 from ecwrite import *
 import enum
+
+
+CONFIG_FILE = "/etc/nitrosense.conf"
 
 ## ------------------------------##
 ## --Nitro EC Register Class--##
@@ -87,7 +90,7 @@ UPDATE_INTERVAL = 1000  # 1 sec interval
 
 def checkUndervoltStatus(self):
     process = QProcess()
-    process.start('sudo amdctl -m -g -c0')
+    process.start('amdctl -m -g -c0')
     # process.waitForStarted()
     process.waitForFinished()
     # process.waitForReadyRead()
@@ -109,7 +112,7 @@ def applyUndervolt(self):
     vid = core * 16
     if (vid == 0):
         vid = 1
-    process.start(f"sudo amdctl -m -v{vid}")
+    process.start(f"amdctl -m -v{vid}")
     # process.waitForStarted()
     process.waitForFinished()
     # process.waitForReadyRead()
@@ -139,7 +142,7 @@ def checkVoltage(self):
     # process.close()
 
     # https://askubuntu.com/questions/876286/how-to-monitor-the-vcore-voltage
-    voltage_process.start("sudo amdctl -g")  # All processors
+    voltage_process.start("amdctl -g")  # All processors
     voltage_process.waitForFinished()
     voltage = voltage_process.readAll()
     voltage = str(voltage, 'utf-8').splitlines()
@@ -203,6 +206,7 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
 
         self.checkPowerTempFan()
         self.checkNitroStatus()
+        self.kbLoadConfig()
         self.setupGUI()
 
         # Setup new timer to periodically read the EC regsiters and update UI
@@ -227,18 +231,11 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         self.cpuManualSlider.valueChanged.connect(self.cpumanual)
         self.gpuManualSlider.valueChanged.connect(self.gpumanual)
         self.exit_button.clicked.connect(self.shutdown)
-        # self.reset_button.clicked.connect(lambda: applyUndervolt(self, 0, 0))
+
         self.undervolt_button.clicked.connect(lambda: applyUndervolt(self))
-
-        # ----------------------------------------------------
-
-        # We can toggle the register but it does not seem to actually disble the trackpad
-        # if self.trackpad == int(TRACKPADENABLED, 0):
-        #     self.trackpadCB.setChecked(False)
-        # elif self.trackpad == int(TRACKPADDISABLED, 0):
-        #     self.trackpadCB.setChecked(True)
-        # else:
-        #     print("Error read EC register for Trackpad: " + str(self.trackpad))
+        self.color_button.clicked.connect(lambda: self.kbSelectColor())
+        self.apply_button.clicked.connect(lambda: self.kbApplySettings())
+        self.save_button.clicked.connect(lambda: self.kbSaveConfig())
 
         # Set the 30 sec backlight timer
         if self.KB30Timeout == int(ECS.KB_30_AUTO_OFF.value, 0):
@@ -475,16 +472,6 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         self.ECHandler.ec_write(
             int(ECS.GPU_MANUAL_SPEED_CONTROL.value, 0), level * 10)
 
-    # Toggle coolboost register
-    # def toggleCB(self, tog):
-    #     print('CoolBoost Toggle: ', end='')
-    #     if tog:
-    #         print('On')
-    #         self.ECHandler.ec_write(int(COOL_BOOST_CONTROL, 0), int(COOL_BOOST_ON, 0))
-    #     else:
-    #         print('Off')
-    #         self.ECHandler.ec_write(int(COOL_BOOST_CONTROL, 0), int(COOL_BOOST_OFF, 0))
-
     # Toggle 30 seconds keyboard backlight timer
     def togglekbauto(self, tog):
         if not tog:
@@ -502,13 +489,6 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         else:
             self.ECHandler.ec_write(
                 int(ECS.POWEROFFUSBCHARGING.value, 0), int(ECS.USBCHARGINGOFF.value, 0))
-
-    # We can toggle the register but it does nothing to actually disble the trackpad
-    # def toggletrackpad(self, tog):
-    #     if not tog:
-    #         self.ECHandler.ec_write(int(ECS.TRACKPADSTATUS.value, 0), int(ECS.TRACKPADENABLED.value, 0))
-    #     else:
-    #         self.ECHandler.ec_write(int(ECS.TRACKPADSTATUS.value, 0), int(ECS.TRACKPADDISABLED.value, 0))
 
     # Toggle Power Limit
     def togglePowerLimit(self, tog):
@@ -557,7 +537,63 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         else:
             print("Error read EC register for Nitro Mode: " + str(self.nitroMode))
 
-        # self.nitroModeValue.adjustSize()
+    # keyboard
+    def kbSelectColor(self):
+        color = QtWidgets.QColorDialog.getColor()
+        if color.isValid():
+            self.selected_color = (color.red(), color.green(), color.blue())
+
+    def kbApplySettings(self):
+        mode = self.mode_combo.currentIndex()
+        zone = self.zone_combo.currentText()
+        speed = self.speed_spin.value()
+        brightness = self.brightness_spin.value()
+        direction = self.direction_combo.currentIndex() + 1
+        red, green, blue = self.selected_color
+
+        command = f"python facer_rgb.py -m {mode}"
+        if (mode != 0):
+            command += f" -s {speed}"
+        command += f" -b {brightness}"
+        if (mode in [3, 4]):
+            command += f" -d {direction}"
+        if (mode in [0, 1, 4, 5]):
+            command += f" -cR {red} -cG {green} -cB {blue}"
+        if (mode == 0 and zone == "all"):
+            for i in range(1, 5):
+                current = command + f" -z {i}"
+                os.system(current)
+            return
+        elif (mode == 0):
+            command += f" -z {zone}"
+        os.system(command)
+
+    def kbSaveConfig(self):
+        if not os.path.exists(CONFIG_FILE):
+            os.system(f"touch {CONFIG_FILE}")
+        path = f"{CONFIG_FILE}"
+        with open(path, "w") as f:
+            f.write(f"{self.mode_combo.currentIndex()}\n")
+            f.write(f"{self.zone_combo.currentIndex()}\n")
+            f.write(f"{self.speed_spin.value()}\n")
+            f.write(f"{self.brightness_spin.value()}\n")
+            f.write(f"{self.direction_combo.currentIndex()}\n")
+            f.write(f"{self.selected_color[0]}\n")
+            f.write(f"{self.selected_color[1]}\n")
+            f.write(f"{self.selected_color[2]}\n")
+
+    def kbLoadConfig(self):
+        if not os.path.exists(CONFIG_FILE):
+            return
+        path = f"{CONFIG_FILE}"
+        with open(path, "r") as f:
+            self.mode_combo.setCurrentIndex(int(f.readline()))
+            self.zone_combo.setCurrentIndex(int(f.readline()))
+            self.speed_spin.setValue(int(f.readline()))
+            self.brightness_spin.setValue(int(f.readline()))
+            self.direction_combo.setCurrentIndex(int(f.readline()))
+            self.selected_color = (int(f.readline()), int(f.readline()), int(f.readline()))
+        self.kbApplySettings()
 
     # Update the UI state
     def updateNitroStatus(self):
@@ -572,12 +608,6 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         self.undervoltStatus.setText(self.undervolt)
 
         self.checkPowerTempFan()
-
-        # print(self.cpuMode)
-        # print(self.gpuMode)
-        # print(int(ECS.CPU_TURBO_MODE.value, 0))
-        # print(int(ECS.GPU_TURBO_MODE.value, 0))
-        # print("-----------")
 
         if (self.cpuMode == int(ECS.CPU_TURBO_MODE.value, 0) or self.cpuMode == int('0xA8', 0)) and self.gpuMode == int(ECS.GPU_TURBO_MODE.value, 0):
             if not self.turboEnabled:
@@ -599,9 +629,6 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         self.cpuFanChart.update_data(self.cpufanspeed)
         self.gpuFanChart.update_data(self.gpufanspeed)
 
-        # print("Sensors: %s, %s, %s, %s, %s, %s, %s" % (str(self.cpufanspeed), str(self.gpufanspeed),
-        #     str(self.cpuTemp), str(self.gpuTemp), str(self.sysTemp), str(self.powerPluggedIn), str(batteryStat)))
-
         self.cpuFanSpeedValue.setText(str(self.cpufanspeed) + " RPM")
         self.gpuFanSpeedValue.setText(str(self.gpufanspeed) + " RPM")
         self.cpuTempValue.setText(str(self.cpuTemp) + "°")
@@ -609,9 +636,8 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         self.sysTempValue.setText(str(self.sysTemp) + "°")
 
         self.powerStatusValue.setText(str(self.powerPluggedIn))
-
-        # self.updateUI(Ui_NitroSense, str(self.cpufanspeed), str(self.gpufanspeed),
-        #     str(self.cpuTemp), str(self.gpuTemp), str(self.sysTemp), str(self.powerPluggedIn), str(batteryStat))
+        
+      
 
     # ----------------------------------------------------
     # Exit the program cleanly
@@ -629,7 +655,7 @@ application = MainWindow()
 app.setApplicationName("Linux NitroSense")
 # Makes the window not resizeable
 application.setFixedSize(application.WIDTH, application.HEIGHT)
-application.setWindowIcon(QtGui.QIcon('app_icon.ico'))
+application.setWindowIcon(QtGui.QIcon('nitro-sense.ico'))
 # Set global window opacity
 # application.setWindowOpacity(0.97)
 
