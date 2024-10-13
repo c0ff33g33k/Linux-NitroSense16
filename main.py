@@ -6,6 +6,7 @@ from PyQt5.QtGui import QPalette, QColor
 
 
 from frontend import Ui_NitroSense
+import keyboard
 from ecwrite import *
 import enum
 
@@ -539,34 +540,20 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
 
     # keyboard
     def kbSelectColor(self):
-        color = QtWidgets.QColorDialog.getColor()
+        # open color dialog with current color selected
+        color = QtWidgets.QColorDialog.getColor(initial=QtGui.QColor.fromRgb(*self.selected_color))
         if color.isValid():
             self.selected_color = (color.red(), color.green(), color.blue())
 
     def kbApplySettings(self):
         mode = self.mode_combo.currentIndex()
-        zone = self.zone_combo.currentText()
+        zone = self.zone_combo.currentIndex()
         speed = self.speed_spin.value()
         brightness = self.brightness_spin.value()
         direction = self.direction_combo.currentIndex() + 1
         red, green, blue = self.selected_color
 
-        command = f"python facer_rgb.py -m {mode}"
-        if (mode != 0):
-            command += f" -s {speed}"
-        command += f" -b {brightness}"
-        if (mode in [3, 4]):
-            command += f" -d {direction}"
-        if (mode in [0, 1, 4, 5]):
-            command += f" -cR {red} -cG {green} -cB {blue}"
-        if (mode == 0 and zone == "all"):
-            for i in range(1, 5):
-                current = command + f" -z {i}"
-                os.system(current)
-            return
-        elif (mode == 0):
-            command += f" -z {zone}"
-        os.system(command)
+        keyboard.set_mode(mode, zone, speed, brightness, direction, red, green, blue)
 
     def kbSaveConfig(self):
         if not os.path.exists(CONFIG_FILE):

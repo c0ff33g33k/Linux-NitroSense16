@@ -713,7 +713,7 @@ class Ui_NitroSense(object):
         self.zone_combo = QtWidgets.QComboBox(self.keyboard_tab)
         self.zone_combo.setGeometry(QtCore.QRect(130, 60, 150, 30))
         self.zone_combo.setObjectName("zone_combo")
-        self.zone_combo.addItems(["1", "2", "3", "4", "all"])
+        self.zone_combo.addItems(["all", "1", "2", "3", "4"])
 
         self.speed_label = QtWidgets.QLabel(self.keyboard_tab)
         self.speed_label.setGeometry(QtCore.QRect(20, 100, 100, 30))
