@@ -237,6 +237,7 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         self.color_button.clicked.connect(lambda: self.kbSelectColor())
         self.apply_button.clicked.connect(lambda: self.kbApplySettings())
         self.save_button.clicked.connect(lambda: self.kbSaveConfig())
+        self.load_button.clicked.connect(lambda: self.kbLoadConfig())
 
         # Set the 30 sec backlight timer
         if self.KB30Timeout == int(ECS.KB_30_AUTO_OFF.value, 0):
