@@ -1,4 +1,5 @@
 import sys
+import os
 
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QTimer, QProcess
@@ -11,7 +12,7 @@ from ecwrite import *
 import enum
 
 
-CONFIG_FILE = "/etc/nitrosense.conf"
+CONFIG_FOLDER = "/etc/nitrosense/"
 
 ## ------------------------------##
 ## --Nitro EC Register Class--##
@@ -19,56 +20,57 @@ CONFIG_FILE = "/etc/nitrosense.conf"
 
 
 class ECS(enum.Enum):
-    GPU_FAN_MODE_CONTROL = '0x21'
-    GPU_AUTO_MODE = '0x10'
-    GPU_TURBO_MODE = '0x20'
-    GPU_MANUAL_MODE = '0x30'
-    GPU_MANUAL_SPEED_CONTROL = '0x3A'
+    GPU_FAN_MODE_CONTROL = "0x21"
+    GPU_AUTO_MODE = "0x10"
+    GPU_TURBO_MODE = "0x20"
+    GPU_MANUAL_MODE = "0x30"
+    GPU_MANUAL_SPEED_CONTROL = "0x3A"
 
-    CPU_FAN_MODE_CONTROL = '0x22'
-    CPU_AUTO_MODE = '0x04'
-    CPU_TURBO_MODE = '0x08'
-    CPU_MANUAL_MODE = '0x0C'
-    CPU_MANUAL_SPEED_CONTROL = '0x37'
+    CPU_FAN_MODE_CONTROL = "0x22"
+    CPU_AUTO_MODE = "0x04"
+    CPU_TURBO_MODE = "0x08"
+    CPU_MANUAL_MODE = "0x0C"
+    CPU_MANUAL_SPEED_CONTROL = "0x37"
 
-    KB_30_SEC_AUTO = '0x06'
-    KB_30_AUTO_OFF = '0x00'
-    KB_30_AUTO_ON = '0x1E'
+    KB_30_SEC_AUTO = "0x06"
+    KB_30_AUTO_OFF = "0x00"
+    KB_30_AUTO_ON = "0x1E"
 
-    CPUFANSPEEDHIGHBITS = '0x13'
-    CPUFANSPEEDLOWBITS = '0x14'
-    GPUFANSPEEDHIGHBITS = '0x15'
-    GPUFANSPEEDLOWBITS = '0x16'
+    CPUFANSPEEDHIGHBITS = "0x13"
+    CPUFANSPEEDLOWBITS = "0x14"
+    GPUFANSPEEDHIGHBITS = "0x15"
+    GPUFANSPEEDLOWBITS = "0x16"
 
-    CPUTEMP = '0xB0'
-    GPUTEMP = '0xB6'
-    SYSTEMP = '0xB3'
+    CPUTEMP = "0xB0"
+    GPUTEMP = "0xB6"
+    SYSTEMP = "0xB3"
 
-    POWERSTATUS = '0x00'
-    POWERPLUGGEDIN = '0x01'
-    POWERUNPLUGGED = '0x00'
+    POWERSTATUS = "0x00"
+    POWERPLUGGEDIN = "0x01"
+    POWERUNPLUGGED = "0x00"
 
-    BATTERYCHARGELIMIT = '0x03'
-    BATTERYLIMITON = '0x51'
-    BATTERYLIMITOFF = '0x11'
+    BATTERYCHARGELIMIT = "0x03"
+    BATTERYLIMITON = "0x51"
+    BATTERYLIMITOFF = "0x11"
 
-    BATTERYSTATUS = '0xC1'
-    BATTERYPLUGGEDINANDCHARGING = '0x02'
-    BATTERYDRAINING = '0x01'
-    BATTERYOFF = '0x00'
+    BATTERYSTATUS = "0xC1"
+    BATTERYPLUGGEDINANDCHARGING = "0x02"
+    BATTERYDRAINING = "0x01"
+    BATTERYOFF = "0x00"
 
-    POWEROFFUSBCHARGING = '0x08'
-    USBCHARGINGON = '0x0F'
-    USBCHARGINGOFF = '0x1F'
+    POWEROFFUSBCHARGING = "0x08"
+    USBCHARGINGON = "0x0F"
+    USBCHARGINGOFF = "0x1F"
 
-    NITROMODE = '0x2C'
-    QUIETMODE = '0x00'
-    DEFAULTMODE = '0x01'
-    EXTREMEMODE = '0x04'
+    NITROMODE = "0x2C"
+    QUIETMODE = "0x00"
+    DEFAULTMODE = "0x01"
+    EXTREMEMODE = "0x04"
 
-    TRACKPADSTATUS = '0xA1'
-    TRACKPADENABLED = '0x00'
-    TRACKPADDISABLED = '0x04'
+    TRACKPADSTATUS = "0xA1"
+    TRACKPADENABLED = "0x00"
+    TRACKPADDISABLED = "0x04"
+
 
 ## ------------------------------##
 ## -------Nitro Fan Mode------##
@@ -91,18 +93,19 @@ UPDATE_INTERVAL = 1000  # 1 sec interval
 
 def checkUndervoltStatus(self):
     process = QProcess()
-    process.start('amdctl -m -g -c0')
+    process.start("amdctl -m -g -c0")
     # process.waitForStarted()
     process.waitForFinished()
     # process.waitForReadyRead()
     underVoltStatus = process.readAll()
     process.close()
 
-    underVoltStatus = str(underVoltStatus, 'utf-8')
+    underVoltStatus = str(underVoltStatus, "utf-8")
     underVoltStatus = underVoltStatus.splitlines()[3:]
-    underVoltStatus = '\n'.join(underVoltStatus)
+    underVoltStatus = "\n".join(underVoltStatus)
     # print(underVoltStatus)
     self.undervolt = underVoltStatus
+
 
 # Apply the undervoltage offsets values
 
@@ -111,19 +114,11 @@ def applyUndervolt(self):
     process = QProcess()
     core = self.undervolt_dropdown.currentIndex()
     vid = core * 16
-    if (vid == 0):
+    if vid == 0:
         vid = 1
     process.start(f"amdctl -m -v{vid}")
-    # process.waitForStarted()
     process.waitForFinished()
-    # process.waitForReadyRead()
     process.close()
-
-    # Reset the min and max values on each undervolt action
-    # self.minrecordedVoltage = 2.0
-    # self.maxrecordedVoltage = 0
-
-    # Call checkUndervoltStatus() to confirm that the setting have been properly applied.
     checkUndervoltStatus(self)
 
 
@@ -133,27 +128,17 @@ voltage_process = QProcess()
 
 
 def checkVoltage(self):
-    # process = QProcess()
-    # process.start('sudo rdmsr 0x198 -p 0 -u --bitfield 47:32') # Processor 0
-    # # process.start('sudo rdmsr 0x198 -a -u --bitfield 47:32') # All processors
-    # process.waitForStarted()
-    # process.waitForFinished()
-    # process.waitForReadyRead()
-    # voltage = process.readAll()
-    # process.close()
-
-    # https://askubuntu.com/questions/876286/how-to-monitor-the-vcore-voltage
     voltage_process.start("amdctl -g")  # All processors
     voltage_process.waitForFinished()
     voltage = voltage_process.readAll()
-    voltage = str(voltage, 'utf-8').splitlines()
+    voltage = str(voltage, "utf-8").splitlines()
     voltages = []
     for line in voltage:
         if "mV" in line:
             line = line.split(" ")
             for comp in line:
                 if "mV" in comp:
-                    voltages.append(int(comp.replace("mV", ""))/1000)
+                    voltages.append(int(comp.replace("mV", "")) / 1000)
 
     if voltages:
         avg_v = sum(voltages) / len(voltages)
@@ -165,12 +150,12 @@ def checkVoltage(self):
         if avg_v > self.maxrecordedVoltage:
             self.maxrecordedVoltage = avg_v
 
+
 ## ------------------------------##
 ## -------Main QT Window---------##
 
 
 class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
-
     def __init__(self):
         self.turboEnabled = False
         self.cpufanspeed = 0
@@ -180,8 +165,11 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         self.sysTemp = 0
         self.voltage = 0.5
         self.underVolt = ""
-        self.minrecordedVoltage = 2.0  # V # Max operating voltage for Intel desktop 13th gen
+        self.minrecordedVoltage = (
+            2.0  # V # Max operating voltage for Intel desktop 13th gen
+        )
         self.maxrecordedVoltage = 0  # V
+        self.selected_color = (255, 255, 255)
 
         self.powerPluggedIn = False
         self.onBatteryPower = False
@@ -208,6 +196,7 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         self.checkPowerTempFan()
         self.checkNitroStatus()
         self.kbLoadConfig()
+        self.loadConfig()
         self.setupGUI()
 
         # Setup new timer to periodically read the EC regsiters and update UI
@@ -216,9 +205,7 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
     # ----------------------------------------------------
     # Initialise the frame, check all registers and set the appropriate widgets
     def setupGUI(self):
-        # if self.cb:
-        #     self.coolboost_checkbox.setChecked(True)
-        # self.coolboost_checkbox.clicked['bool'].connect(self.toggleCB)
+        # when any of the radio buttons are clicked, also save the current settings
 
         self.global_auto.clicked.connect(self.setDefaultMode)
         self.global_turbo.clicked.connect(self.setTurboMode)
@@ -233,11 +220,11 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         self.gpuManualSlider.valueChanged.connect(self.gpumanual)
         self.exit_button.clicked.connect(self.shutdown)
 
-        self.undervolt_button.clicked.connect(lambda: applyUndervolt(self))
-        self.color_button.clicked.connect(lambda: self.kbSelectColor())
-        self.apply_button.clicked.connect(lambda: self.kbApplySettings())
-        self.save_button.clicked.connect(lambda: self.kbSaveConfig())
-        self.load_button.clicked.connect(lambda: self.kbLoadConfig())
+        self.undervolt_button.clicked.connect(lambda: self.saveAndRun(applyUndervolt))
+        self.color_button.clicked.connect(lambda: self.saveAndRun(self.kbSelectColor))
+        self.apply_button.clicked.connect(lambda: self.saveAndRun(self.kbApplySettings))
+        self.save_button.clicked.connect(lambda: self.saveAndRun(self.kbSaveConfig))
+        self.load_button.clicked.connect(lambda: self.saveAndRun(self.kbLoadConfig))
 
         # Set the 30 sec backlight timer
         if self.KB30Timeout == int(ECS.KB_30_AUTO_OFF.value, 0):
@@ -251,8 +238,7 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         elif self.usbCharging == int(ECS.USBCHARGINGOFF.value, 0):
             self.usbChargingCB.setChecked(False)
         else:
-            print("Error read EC register for USB Charging: " +
-                  str(self.usbCharging))
+            print("Error read EC register for USB Charging: " + str(self.usbCharging))
 
         # Set the charge limit indicator
         if self.batteryChargeLimit == int(ECS.BATTERYLIMITON.value, 0):
@@ -262,28 +248,32 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
             self.chargeLimit.setChecked(False)
             self.batteryChargeLimitValue.setText("Off")
         else:
-            print("Error read EC register for Charge Limit: " +
-                  str(self.batteryChargeLimit))
+            print(
+                "Error read EC register for Charge Limit: "
+                + str(self.batteryChargeLimit)
+            )
 
         self.setNitroMode()
         self.setFanMode()
 
         # ----------------------------------------------------
 
-        self.quietModeCB.clicked['bool'].connect(self.setQuietMode)
-        self.defaultModeCB.clicked['bool'].connect(self.setDefaultMode)
-        self.extremeModeCB.clicked['bool'].connect(self.setExtremeMode)
+        self.quietModeCB.clicked["bool"].connect(self.setQuietMode)
+        self.defaultModeCB.clicked["bool"].connect(self.setDefaultMode)
+        self.extremeModeCB.clicked["bool"].connect(self.setExtremeMode)
         # self.trackpadCB.clicked['bool'].connect(self.toggletrackpad)
-        self.KBTimerCB.clicked['bool'].connect(self.togglekbauto)
-        self.usbChargingCB.clicked['bool'].connect(self.toggleUSBCharging)
-        self.chargeLimit.clicked['bool'].connect(self.togglePowerLimit)
+        self.KBTimerCB.clicked["bool"].connect(self.togglekbauto)
+        self.usbChargingCB.clicked["bool"].connect(self.toggleUSBCharging)
+        self.chargeLimit.clicked["bool"].connect(self.togglePowerLimit)
 
     # Set the current fan and turbo mode
     def setFanMode(self):
         if self.cpuMode == int(ECS.CPU_AUTO_MODE.value, 0):
             self.cpuFanMode = PFS.Auto
             self.cpu_auto.setChecked(True)
-        elif self.cpuMode == int(ECS.CPU_TURBO_MODE.value, 0) or self.cpuMode == int('0xA8', 0):
+        elif self.cpuMode == int(ECS.CPU_TURBO_MODE.value, 0) or self.cpuMode == int(
+            "0xA8", 0
+        ):
             self.cpuFanMode = PFS.Turbo
             self.cpu_turbo.setChecked(True)
             self.turboEnabled = True
@@ -291,11 +281,12 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
             self.cpuFanMode = PFS.Manual
             self.cpu_manual.setChecked(True)
         else:
-            print("Warning: Unknow CPU fan mode value '" +
-                  str(self.cpuMode) + "'")
+            print("Warning: Unknow CPU fan mode value '" + str(self.cpuMode) + "'")
             # self.cpuauto()
 
-        if self.gpuMode == int(ECS.GPU_AUTO_MODE.value, 0) or self.gpuMode == int('0x00', 0):
+        if self.gpuMode == int(ECS.GPU_AUTO_MODE.value, 0) or self.gpuMode == int(
+            "0x00", 0
+        ):
             self.gpuFanMode = PFS.Auto
             self.gpu_auto.setChecked(True)
         elif self.gpuMode == int(ECS.GPU_TURBO_MODE.value, 0):
@@ -305,8 +296,7 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
             self.gpuFanMode = PFS.Manual
             self.gpu_manual.setChecked(True)
         else:
-            print("Warning: Unknow GPU fan mode value '" +
-                  str(self.gpuMode) + "'")
+            print("Warning: Unknow GPU fan mode value '" + str(self.gpuMode) + "'")
             # self.gpuauto()
 
         # if cpuTurboEnabled and gpuTurboEnabled:
@@ -328,24 +318,22 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
     # Read the various EC registers and update the GUI
     def checkNitroStatus(self):
         # self.cb = self.ECHandler.ec_read(int(COOL_BOOST_CONTROL, 0)) == 1
-        self.cpuMode = self.ECHandler.ec_read(
-            int(ECS.CPU_FAN_MODE_CONTROL.value, 0))
-        self.gpuMode = self.ECHandler.ec_read(
-            int(ECS.GPU_FAN_MODE_CONTROL.value, 0))
-        self.KB30Timeout = self.ECHandler.ec_read(
-            int(ECS.KB_30_SEC_AUTO.value, 0))
-        self.usbCharging = self.ECHandler.ec_read(
-            int(ECS.POWEROFFUSBCHARGING.value, 0))
+        self.cpuMode = self.ECHandler.ec_read(int(ECS.CPU_FAN_MODE_CONTROL.value, 0))
+        self.gpuMode = self.ECHandler.ec_read(int(ECS.GPU_FAN_MODE_CONTROL.value, 0))
+        self.KB30Timeout = self.ECHandler.ec_read(int(ECS.KB_30_SEC_AUTO.value, 0))
+        self.usbCharging = self.ECHandler.ec_read(int(ECS.POWEROFFUSBCHARGING.value, 0))
         self.nitroMode = self.ECHandler.ec_read(int(ECS.NITROMODE.value, 0))
         self.batteryChargeLimit = self.ECHandler.ec_read(
-            int(ECS.BATTERYCHARGELIMIT.value, 0))
-        self.trackpad = self.ECHandler.ec_read(
-            int(ECS.TRACKPADSTATUS.value, 0))
+            int(ECS.BATTERYCHARGELIMIT.value, 0)
+        )
+        self.trackpad = self.ECHandler.ec_read(int(ECS.TRACKPADSTATUS.value, 0))
 
         self.cpuFanSpeed = self.ECHandler.ec_read(
-            int(ECS.CPU_MANUAL_SPEED_CONTROL.value, 0))
+            int(ECS.CPU_MANUAL_SPEED_CONTROL.value, 0)
+        )
         self.gpuFanSpeed = self.ECHandler.ec_read(
-            int(ECS.GPU_MANUAL_SPEED_CONTROL.value, 0))
+            int(ECS.GPU_MANUAL_SPEED_CONTROL.value, 0)
+        )
         self.cpuManualSlider.setSliderPosition(int(self.cpuFanSpeed / 10))
         self.gpuManualSlider.setSliderPosition(int(self.gpuFanSpeed / 10))
 
@@ -356,35 +344,36 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         # -optimisation, read EC registers once per update, prevents hangs/unresponsive GUI
         self.ECHandler.ec_refresh()
 
-        self.cpuMode = self.ECHandler.ec_read(
-            int(ECS.CPU_FAN_MODE_CONTROL.value, 0))
-        self.gpuMode = self.ECHandler.ec_read(
-            int(ECS.GPU_FAN_MODE_CONTROL.value, 0))
-        self.powerPluggedIn = self.ECHandler.ec_read(
-            int(ECS.POWERSTATUS.value, 0))
-        self.onBatteryPower = self.ECHandler.ec_read(
-            int(ECS.BATTERYSTATUS.value, 0))
+        self.cpuMode = self.ECHandler.ec_read(int(ECS.CPU_FAN_MODE_CONTROL.value, 0))
+        self.gpuMode = self.ECHandler.ec_read(int(ECS.GPU_FAN_MODE_CONTROL.value, 0))
+        self.powerPluggedIn = self.ECHandler.ec_read(int(ECS.POWERSTATUS.value, 0))
+        self.onBatteryPower = self.ECHandler.ec_read(int(ECS.BATTERYSTATUS.value, 0))
         self.nitroMode = self.ECHandler.ec_read(int(ECS.NITROMODE.value, 0))
         self.batteryChargeLimit = self.ECHandler.ec_read(
-            int(ECS.BATTERYCHARGELIMIT.value, 0))
+            int(ECS.BATTERYCHARGELIMIT.value, 0)
+        )
 
         self.cpuTemp = self.ECHandler.ec_read(int(ECS.CPUTEMP.value, 0))
         self.gpuTemp = self.ECHandler.ec_read(int(ECS.GPUTEMP.value, 0))
         self.sysTemp = self.ECHandler.ec_read(int(ECS.SYSTEMP.value, 0))
 
         cpufanspeedHighBits = self.ECHandler.ec_read(
-            int(ECS.CPUFANSPEEDHIGHBITS.value, 0))
+            int(ECS.CPUFANSPEEDHIGHBITS.value, 0)
+        )
         cpufanspeedLowBits = self.ECHandler.ec_read(
-            int(ECS.CPUFANSPEEDLOWBITS.value, 0))
+            int(ECS.CPUFANSPEEDLOWBITS.value, 0)
+        )
         # example
         # cpufanspeed = '0x068B'
         # 1675
         self.cpufanspeed = cpufanspeedLowBits << 8 | cpufanspeedHighBits
 
         gpufanspeedHighBits = self.ECHandler.ec_read(
-            int(ECS.GPUFANSPEEDHIGHBITS.value, 0))
+            int(ECS.GPUFANSPEEDHIGHBITS.value, 0)
+        )
         gpufanspeedLowBits = self.ECHandler.ec_read(
-            int(ECS.GPUFANSPEEDLOWBITS.value, 0))
+            int(ECS.GPUFANSPEEDLOWBITS.value, 0)
+        )
         self.gpufanspeed = gpufanspeedLowBits << 8 | gpufanspeedHighBits
         # print("cpufanspeed: " + str(cpufanspeed))
         # print("gpufanspeed: " + gpufanspeed)
@@ -392,22 +381,26 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
     # ---------Radio Button callback functions------------
     def setQuietMode(self):
         self.ECHandler.ec_write(
-            int(ECS.NITROMODE.value, 0), int(ECS.QUIETMODE.value, 0))
+            int(ECS.NITROMODE.value, 0), int(ECS.QUIETMODE.value, 0)
+        )
         self.setGlobalAuto()
 
     def setDefaultMode(self):
         self.ECHandler.ec_write(
-            int(ECS.NITROMODE.value, 0), int(ECS.DEFAULTMODE.value, 0))
+            int(ECS.NITROMODE.value, 0), int(ECS.DEFAULTMODE.value, 0)
+        )
         self.setGlobalAuto()
 
     def setExtremeMode(self):
         self.ECHandler.ec_write(
-            int(ECS.NITROMODE.value, 0), int(ECS.EXTREMEMODE.value, 0))
+            int(ECS.NITROMODE.value, 0), int(ECS.EXTREMEMODE.value, 0)
+        )
         self.setGlobalAuto()
 
     def setTurboMode(self):
         self.ECHandler.ec_write(
-            int(ECS.NITROMODE.value, 0), int(ECS.EXTREMEMODE.value, 0))
+            int(ECS.NITROMODE.value, 0), int(ECS.EXTREMEMODE.value, 0)
+        )
         self.setGlobalTurbo()
 
     def setGlobalAuto(self):
@@ -434,78 +427,88 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
 
     def cpuauto(self):
         self.ECHandler.ec_write(
-            int(ECS.CPU_FAN_MODE_CONTROL.value, 0), int(ECS.CPU_AUTO_MODE.value, 0))
+            int(ECS.CPU_FAN_MODE_CONTROL.value, 0), int(ECS.CPU_AUTO_MODE.value, 0)
+        )
         self.cpuFanMode = PFS.Auto
 
     def cpumax(self):
         self.ECHandler.ec_write(
-            int(ECS.CPU_FAN_MODE_CONTROL.value, 0), int(ECS.CPU_TURBO_MODE.value, 0))
+            int(ECS.CPU_FAN_MODE_CONTROL.value, 0), int(ECS.CPU_TURBO_MODE.value, 0)
+        )
         self.cpuFanMode = PFS.Turbo
 
     def cpusetmanual(self):
         self.ECHandler.ec_write(
-            int(ECS.CPU_FAN_MODE_CONTROL.value, 0), int(ECS.CPU_MANUAL_MODE.value, 0))
+            int(ECS.CPU_FAN_MODE_CONTROL.value, 0), int(ECS.CPU_MANUAL_MODE.value, 0)
+        )
         self.cpuFanMode = PFS.Manual
 
     def cpumanual(self, level):
         # print(str(level * 10), end=', ')
         # print(hex(level * 10))
-        self.ECHandler.ec_write(
-            int(ECS.CPU_MANUAL_SPEED_CONTROL.value, 0), level * 10)
+        self.ECHandler.ec_write(int(ECS.CPU_MANUAL_SPEED_CONTROL.value, 0), level * 10)
 
     def gpuauto(self):
         self.ECHandler.ec_write(
-            int(ECS.GPU_FAN_MODE_CONTROL.value, 0), int(ECS.GPU_AUTO_MODE.value, 0))
+            int(ECS.GPU_FAN_MODE_CONTROL.value, 0), int(ECS.GPU_AUTO_MODE.value, 0)
+        )
         self.gpuFanMode = PFS.Auto
 
     def gpumax(self):
         self.ECHandler.ec_write(
-            int(ECS.GPU_FAN_MODE_CONTROL.value, 0), int(ECS.GPU_TURBO_MODE.value, 0))
+            int(ECS.GPU_FAN_MODE_CONTROL.value, 0), int(ECS.GPU_TURBO_MODE.value, 0)
+        )
         self.gpuFanMode = PFS.Turbo
 
     def gpusetmanual(self):
         self.ECHandler.ec_write(
-            int(ECS.GPU_FAN_MODE_CONTROL.value, 0), int(ECS.GPU_MANUAL_MODE.value, 0))
+            int(ECS.GPU_FAN_MODE_CONTROL.value, 0), int(ECS.GPU_MANUAL_MODE.value, 0)
+        )
         self.gpuFanMode = PFS.Manual
 
     def gpumanual(self, level):
         # print(level * 10, end=', ')
         # print(hex(level * 10))
-        self.ECHandler.ec_write(
-            int(ECS.GPU_MANUAL_SPEED_CONTROL.value, 0), level * 10)
+        self.ECHandler.ec_write(int(ECS.GPU_MANUAL_SPEED_CONTROL.value, 0), level * 10)
 
     # Toggle 30 seconds keyboard backlight timer
     def togglekbauto(self, tog):
         if not tog:
             self.ECHandler.ec_write(
-                int(ECS.KB_30_SEC_AUTO.value, 0), int(ECS.KB_30_AUTO_OFF.value, 0))
+                int(ECS.KB_30_SEC_AUTO.value, 0), int(ECS.KB_30_AUTO_OFF.value, 0)
+            )
         else:
             self.ECHandler.ec_write(
-                int(ECS.KB_30_SEC_AUTO.value, 0), int(ECS.KB_30_AUTO_ON.value, 0))
+                int(ECS.KB_30_SEC_AUTO.value, 0), int(ECS.KB_30_AUTO_ON.value, 0)
+            )
 
     # USB charging whilst off
     def toggleUSBCharging(self, tog):
         if tog:
             self.ECHandler.ec_write(
-                int(ECS.POWEROFFUSBCHARGING.value, 0), int(ECS.USBCHARGINGON.value, 0))
+                int(ECS.POWEROFFUSBCHARGING.value, 0), int(ECS.USBCHARGINGON.value, 0)
+            )
         else:
             self.ECHandler.ec_write(
-                int(ECS.POWEROFFUSBCHARGING.value, 0), int(ECS.USBCHARGINGOFF.value, 0))
+                int(ECS.POWEROFFUSBCHARGING.value, 0), int(ECS.USBCHARGINGOFF.value, 0)
+            )
 
     # Toggle Power Limit
     def togglePowerLimit(self, tog):
         if tog:
             self.ECHandler.ec_write(
-                int(ECS.BATTERYCHARGELIMIT.value, 0), int(ECS.BATTERYLIMITON.value, 0))
+                int(ECS.BATTERYCHARGELIMIT.value, 0), int(ECS.BATTERYLIMITON.value, 0)
+            )
         else:
             self.ECHandler.ec_write(
-                int(ECS.BATTERYCHARGELIMIT.value, 0), int(ECS.BATTERYLIMITOFF.value, 0))
+                int(ECS.BATTERYCHARGELIMIT.value, 0), int(ECS.BATTERYLIMITOFF.value, 0)
+            )
 
     # ----------------------------------------------------
 
     # Update the Battery status
     def setBatteryStatus(self):
-        batteryStat = 'Discharging'
+        batteryStat = "Discharging"
         if self.onBatteryPower == int(ECS.BATTERYPLUGGEDINANDCHARGING.value, 0):
             batteryStat = "Charging"
         elif self.onBatteryPower == int(ECS.BATTERYDRAINING.value, 0):
@@ -513,8 +516,10 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         elif self.onBatteryPower == int(ECS.BATTERYOFF.value, 0):
             batteryStat = "Battery Not In Use"
         else:
-            print("Error read EC register for Battery Status: " +
-                  str(hex(self.onBatteryPower)))
+            print(
+                "Error read EC register for Battery Status: "
+                + str(hex(self.onBatteryPower))
+            )
 
         self.batteryStatusValue.setText(batteryStat)
 
@@ -542,7 +547,9 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
     # keyboard
     def kbSelectColor(self):
         # open color dialog with current color selected
-        color = QtWidgets.QColorDialog.getColor(initial=QtGui.QColor.fromRgb(*self.selected_color))
+        color = QtWidgets.QColorDialog.getColor(
+            initial=QtGui.QColor.fromRgb(*self.selected_color)
+        )
         if color.isValid():
             self.selected_color = (color.red(), color.green(), color.blue())
 
@@ -557,9 +564,10 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         keyboard.set_mode(mode, zone, speed, brightness, direction, red, green, blue)
 
     def kbSaveConfig(self):
-        if not os.path.exists(CONFIG_FILE):
-            os.system(f"touch {CONFIG_FILE}")
-        path = f"{CONFIG_FILE}"
+        if not os.path.exists(CONFIG_FOLDER + "rbg.conf"):
+            os.system(f"mkdir -p {CONFIG_FOLDER}")
+            os.system(f"touch {CONFIG_FOLDER + 'rbg.conf'}")
+        path = f"{CONFIG_FOLDER + 'rbg.conf'}"
         with open(path, "w") as f:
             f.write(f"{self.mode_combo.currentIndex()}\n")
             f.write(f"{self.zone_combo.currentIndex()}\n")
@@ -571,24 +579,64 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
             f.write(f"{self.selected_color[2]}\n")
 
     def kbLoadConfig(self):
-        if not os.path.exists(CONFIG_FILE):
+        if not os.path.exists(CONFIG_FOLDER + "rbg.conf"):
             return
-        path = f"{CONFIG_FILE}"
+        path = f"{CONFIG_FOLDER + 'rbg.conf'}"
         with open(path, "r") as f:
             self.mode_combo.setCurrentIndex(int(f.readline()))
             self.zone_combo.setCurrentIndex(int(f.readline()))
             self.speed_spin.setValue(int(f.readline()))
             self.brightness_spin.setValue(int(f.readline()))
             self.direction_combo.setCurrentIndex(int(f.readline()))
-            self.selected_color = (int(f.readline()), int(f.readline()), int(f.readline()))
+            self.selected_color = (
+                int(f.readline()),
+                int(f.readline()),
+                int(f.readline()),
+            )
         self.kbApplySettings()
+
+    def saveConfig(self):
+        if not os.path.exists(CONFIG_FOLDER + "nitrosense.conf"):
+            os.system(f"mkdir -p {CONFIG_FOLDER}")
+            os.system(f"touch {CONFIG_FOLDER + 'nitrosense.conf'}")
+        path = f"{CONFIG_FOLDER + 'nitrosense.conf'}"
+        with open(path, "w") as f:
+            f.write(f"{self.cpuMode}\n")
+            f.write(f"{self.gpuMode}\n")
+            f.write(f"{self.KB30Timeout}\n")
+            f.write(f"{self.usbCharging}\n")
+            f.write(f"{self.nitroMode}\n")
+            f.write(f"{self.batteryChargeLimit}\n")
+
+    def loadConfig(self):
+        if not os.path.exists(CONFIG_FOLDER + "nitrosense.conf"):
+            return
+        path = f"{CONFIG_FOLDER + 'nitrosense.conf'}"
+        with open(path, "r") as f:
+            self.cpuMode = int(f.readline())
+            self.gpuMode = int(f.readline())
+            self.KB30Timeout = int(f.readline())
+            self.usbCharging = int(f.readline())
+            self.nitroMode = int(f.readline())
+            self.batteryChargeLimit = int(f.readline())
+        self.setFanMode()
+        self.setNitroMode()
+        self.checkPowerTempFan()
+        self.setBatteryStatus()
+
+    def saveAndRun(self, function):
+        function()
+        self.saveConfig()
 
     # Update the UI state
     def updateNitroStatus(self):
         checkVoltage(self)
         # print(self.voltage)
-        minmaxVoltages = str("%1.2f" % self.minrecordedVoltage) + \
-            " / " + str("%1.2f" % self.maxrecordedVoltage)
+        minmaxVoltages = (
+            str("%1.2f" % self.minrecordedVoltage)
+            + " / "
+            + str("%1.2f" % self.maxrecordedVoltage)
+        )
         # print(minmaxVoltages)
         self.voltageValue.setText(str("%1.2f" % self.voltage))
         self.voltageMinMaxValue.setText(minmaxVoltages)
@@ -597,12 +645,17 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
 
         self.checkPowerTempFan()
 
-        if (self.cpuMode == int(ECS.CPU_TURBO_MODE.value, 0) or self.cpuMode == int('0xA8', 0)) and self.gpuMode == int(ECS.GPU_TURBO_MODE.value, 0):
+        if (
+            self.cpuMode == int(ECS.CPU_TURBO_MODE.value, 0)
+            or self.cpuMode == int("0xA8", 0)
+        ) and self.gpuMode == int(ECS.GPU_TURBO_MODE.value, 0):
             if not self.turboEnabled:
                 print("Turbo enabled")
                 self.setTurboMode()
 
-        if self.cpuMode == int(ECS.CPU_AUTO_MODE.value, 0) and self.gpuMode == int(ECS.GPU_AUTO_MODE.value, 0):
+        if self.cpuMode == int(ECS.CPU_AUTO_MODE.value, 0) and self.gpuMode == int(
+            ECS.GPU_AUTO_MODE.value, 0
+        ):
             if self.turboEnabled:
                 print("Turbo disabled")
                 self.setDefaultMode()
@@ -624,8 +677,6 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         self.sysTempValue.setText(str(self.sysTemp) + "°")
 
         self.powerStatusValue.setText(str(self.powerPluggedIn))
-        
-      
 
     # ----------------------------------------------------
     # Exit the program cleanly
@@ -643,11 +694,11 @@ application = MainWindow()
 app.setApplicationName("Linux NitroSense")
 # Makes the window not resizeable
 application.setFixedSize(application.WIDTH, application.HEIGHT)
-application.setWindowIcon(QtGui.QIcon('nitro-sense.ico'))
+application.setWindowIcon(QtGui.QIcon("nitro-sense.ico"))
 # Set global window opacity
 # application.setWindowOpacity(0.97)
 
-app.setStyle('Breeze')
+app.setStyle("Breeze")
 # Dark theme implementation
 palette = QPalette()
 palette.setColor(QPalette.Window, QColor(53, 53, 53))
