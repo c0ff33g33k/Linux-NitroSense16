@@ -220,7 +220,7 @@ class MainWindow(QtWidgets.QDialog, Ui_NitroSense):
         self.gpuManualSlider.valueChanged.connect(self.gpumanual)
         self.exit_button.clicked.connect(self.shutdown)
 
-        self.undervolt_button.clicked.connect(lambda: self.saveAndRun(applyUndervolt))
+        self.undervolt_button.clicked.connect(lambda: applyUndervolt(self))
         self.color_button.clicked.connect(lambda: self.saveAndRun(self.kbSelectColor))
         self.apply_button.clicked.connect(lambda: self.saveAndRun(self.kbApplySettings))
         self.save_button.clicked.connect(lambda: self.saveAndRun(self.kbSaveConfig))
