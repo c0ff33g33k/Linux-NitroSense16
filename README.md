@@ -1,6 +1,4 @@
-## NitroSense™ clone for ```Acer Nitro 16```
-
-![Predator Sense](LinuxPredatorSense.png)
+## NitroSense™ clone for ```Acer Nitro AN16-51```
 
 ## Disclaimer:
 * Secure Boot **IS** \* supported if you only use the ```acpi_ec``` package.
@@ -115,8 +113,4 @@ Packages:
 * ```undervolt``` -> [Undervolt by georgewhewell](https://github.com/georgewhewell/undervolt)
 * ```msr-tools``` -> [msr-tools by intel](https://github.com/intel/msr-tools)
 
-## This is a fork of [PredatorSense by snowyoneill](https://github.com/snowyoneill/Linux-PredatorSense), customized for ```AN515-46-R5WF```
-
-## Changelog:
-
-Nothing yet
+## This is a fork of [PredatorSense by snowyoneill](https://github.com/snowyoneill/Linux-PredatorSense), customized for ```AN16-51```
