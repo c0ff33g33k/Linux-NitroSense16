@@ -1,6 +1,7 @@
 ## NitroSense™ clone for ```Acer Nitro AN16-51```
 
 ## Disclaimer:
+* NOT WORKING!!!!!
 * Secure Boot **IS** \* supported if you only use the ```acpi_ec``` package.
 * Secure Boot is **NOT** \* supported if you want to control CPU voltage offsets using the ```msr-tools``` and ```undervolt``` packages.
 * Using this application with other laptops may potentially damage them. Proceed at your discretion.
